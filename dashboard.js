@@ -848,5 +848,4 @@ function formatMes(mesStr) {
     return `${monthNames[parseInt(month) - 1]}/${year}`;
 }
 
-// Inicializar ao carregar a página
-window.addEventListener('load', loadData);
+// Inicializar ao carregar a página (removido - já está no index.html)

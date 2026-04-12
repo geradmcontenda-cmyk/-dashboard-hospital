@@ -629,6 +629,27 @@
         <p>Dados atualizados até: <span id="dataAtualizacao">-</span></p>
     </div>
 
-    <script src="dashboard.js"></script>
+    <script>
+    // Carregar dados com tratamento de erro
+    async function loadData() {
+        try {
+            const response = await fetch('./dashboard_data.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const text = await response.text();
+            allData = JSON.parse(text);
+            filteredData = JSON.parse(JSON.stringify(allData));
+            initializeFilters();
+            renderExecutivo();
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            document.body.innerHTML = '<div style="padding: 20px; color: red;"><h2>Erro ao carregar dados</h2><p>' + error.message + '</p></div>';
+        }
+    }
+    </script>
+    <script src="./dashboard.js"></script>
+    <script>
+    // Iniciar após o carregamento
+    window.addEventListener('load', loadData);
+    </script>
 </body>
 </html>
