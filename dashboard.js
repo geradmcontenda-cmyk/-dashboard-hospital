@@ -1,7 +1,6 @@
 // Variáveis globais
 let allData = {};
 let charts = {};
-let filteredData = {};
 
 // Carregar dados
 async function loadData() {
@@ -10,7 +9,6 @@ async function loadData() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const text = await response.text();
         allData = JSON.parse(text);
-        filteredData = JSON.parse(JSON.stringify(allData));
         initializeFilters();
         renderExecutivo();
     } catch (error) {
@@ -25,7 +23,6 @@ function initializeFilters() {
     const sexos = new Set();
     const municipios = new Set();
 
-    // Extrair valores únicos
     if (allData.atendimento_geral_mensal) {
         allData.atendimento_geral_mensal.forEach(row => {
             if (row.Mes) meses.add(row.Mes);
@@ -50,13 +47,11 @@ function initializeFilters() {
         });
     }
 
-    // Preencher selects
     populateSelect('filterMes', Array.from(meses).sort());
     populateSelect('filterRisco', Array.from(riscos).sort());
     populateSelect('filterSexo', Array.from(sexos).sort());
     populateSelect('filterMunicipio', Array.from(municipios).sort());
 
-    // Adicionar event listeners
     document.getElementById('filterMes').addEventListener('change', applyFilters);
     document.getElementById('filterRisco').addEventListener('change', applyFilters);
     document.getElementById('filterSexo').addEventListener('change', applyFilters);
@@ -73,16 +68,15 @@ function populateSelect(elementId, values) {
     });
 }
 
-function applyFilters() {
+function getFilteredData() {
     const mes = document.getElementById('filterMes').value;
     const risco = document.getElementById('filterRisco').value;
     const sexo = document.getElementById('filterSexo').value;
     const municipio = document.getElementById('filterMunicipio').value;
 
-    // Aplicar filtros a todos os dados
-    filteredData = {};
+    const filtered = {};
     for (const key in allData) {
-        filteredData[key] = allData[key].filter(row => {
+        filtered[key] = allData[key].filter(row => {
             let match = true;
             if (mes && row.Mes && row.Mes !== mes) match = false;
             if (risco && row.Classificacao && row.Classificacao !== risco) match = false;
@@ -91,35 +85,41 @@ function applyFilters() {
             return match;
         });
     }
+    return filtered;
+}
 
-    // Re-renderizar todas as abas visíveis
+function applyFilters() {
     const activeTab = document.querySelector('.tab-content.active');
-    if (activeTab) {
-        const tabId = activeTab.id;
-        if (tabId === 'executivo') renderExecutivo();
-        else if (tabId === 'atendimento') renderAtendimento();
-        else if (tabId === 'assistencial') renderAssistencial();
-        else if (tabId === 'operacional') renderOperacional();
-        else if (tabId === 'insights') renderInsights();
-    }
+    if (!activeTab) return;
+    
+    const tabId = activeTab.id;
+    if (tabId === 'executivo') renderExecutivo();
+    else if (tabId === 'atendimento') renderAtendimento();
+    else if (tabId === 'assistencial') renderAssistencial();
+    else if (tabId === 'operacional') renderOperacional();
+    else if (tabId === 'insights') renderInsights();
 }
 
-// Funções de renderização
+function formatMes(mesStr) {
+    if (!mesStr) return '-';
+    const [year, month] = mesStr.split('-');
+    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    return `${monthNames[parseInt(month) - 1]}/${year}`;
+}
+
+// ===== PAINEL EXECUTIVO =====
 function renderExecutivo() {
-    renderKPIExecutivo();
-    renderChartEvolucao();
-}
-
-function renderKPIExecutivo() {
+    const data = getFilteredData();
+    
     const container = document.getElementById('kpiExecutivo');
     if (!container) return;
     container.innerHTML = '';
 
-    const totalAtendimentos = filteredData.atendimento_geral_mensal?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const totalInternacoes = filteredData.internacoes_tipo?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const totalExamesLab = filteredData.exames_laboratoriais?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const totalRadiografias = filteredData.radiografias?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const totalProcedimentos = filteredData.procedimentos?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
+    const totalAtendimentos = (data.atendimento_geral_mensal || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const totalInternacoes = (data.internacoes_tipo || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const totalExamesLab = (data.exames_laboratoriais || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const totalRadiografias = (data.radiografias || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const totalProcedimentos = (data.procedimentos || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
 
     const kpis = [
         { title: 'Total de Atendimentos', value: totalAtendimentos, class: 'primary' },
@@ -132,19 +132,16 @@ function renderKPIExecutivo() {
     kpis.forEach(kpi => {
         const card = document.createElement('div');
         card.className = `kpi-card ${kpi.class}`;
-        card.innerHTML = `
-            <h3>${kpi.title}</h3>
-            <div class="value">${kpi.value.toLocaleString('pt-BR')}</div>
-        `;
+        card.innerHTML = `<h3>${kpi.title}</h3><div class="value">${kpi.value.toLocaleString('pt-BR')}</div>`;
         container.appendChild(card);
     });
 
-    document.getElementById('dataAtualizacao').textContent = new Date().toLocaleDateString('pt-BR');
+    renderChartEvolucao(data);
 }
 
-function renderChartEvolucao() {
-    const data = filteredData.atendimento_geral_mensal || [];
-    const sorted = data.sort((a, b) => a.Mes.localeCompare(b.Mes));
+function renderChartEvolucao(data) {
+    const chartData = data.atendimento_geral_mensal || [];
+    const sorted = chartData.sort((a, b) => a.Mes.localeCompare(b.Mes));
 
     const canvas = document.getElementById('chartEvolucao');
     if (!canvas) return;
@@ -164,43 +161,39 @@ function renderChartEvolucao() {
                 tension: 0.4,
                 fill: true,
                 pointRadius: 6,
-                pointBackgroundColor: '#0066cc',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
+                pointBackgroundColor: '#0066cc'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: true, position: 'top' }
-            },
-            scales: {
-                y: { beginAtZero: true }
-            }
+            plugins: { legend: { display: true } },
+            scales: { y: { beginAtZero: true } }
         }
     });
 }
 
+// ===== ABA ATENDIMENTO =====
 function renderAtendimento() {
-    renderKPIAtendimento();
-    renderChartRisco();
-    renderChartSexo();
-    renderChartMunicipio();
-    renderTableTemposAtendimento();
-    renderTableCID();
+    const data = getFilteredData();
+    
+    renderKPIAtendimento(data);
+    renderChartRisco(data);
+    renderChartSexo(data);
+    renderChartMunicipio(data);
+    renderTableCID(data);
 }
 
-function renderKPIAtendimento() {
+function renderKPIAtendimento(data) {
     const container = document.getElementById('kpiAtendimento');
     if (!container) return;
     container.innerHTML = '';
 
-    const imediato = filteredData.atendimento_risco?.filter(r => r.Classificacao.includes('Imediato')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const dez_min = filteredData.atendimento_risco?.filter(r => r.Classificacao.includes('10 Minutos')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const sessenta_min = filteredData.atendimento_risco?.filter(r => r.Classificacao.includes('60 Minutos')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const cento_vinte = filteredData.atendimento_risco?.filter(r => r.Classificacao.includes('120 Minutos')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const duzentos_quarenta = filteredData.atendimento_risco?.filter(r => r.Classificacao.includes('240 Minutos')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
+    const imediato = (data.atendimento_risco || []).filter(r => r.Classificacao.includes('Imediato')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const dez_min = (data.atendimento_risco || []).filter(r => r.Classificacao.includes('10')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const sessenta_min = (data.atendimento_risco || []).filter(r => r.Classificacao.includes('60')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const cento_vinte = (data.atendimento_risco || []).filter(r => r.Classificacao.includes('120')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const duzentos_quarenta = (data.atendimento_risco || []).filter(r => r.Classificacao.includes('240')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
 
     const kpis = [
         { title: 'Imediato', value: imediato, class: 'warning' },
@@ -213,18 +206,15 @@ function renderKPIAtendimento() {
     kpis.forEach(kpi => {
         const card = document.createElement('div');
         card.className = `kpi-card ${kpi.class}`;
-        card.innerHTML = `
-            <h3>${kpi.title}</h3>
-            <div class="value">${kpi.value.toLocaleString('pt-BR')}</div>
-        `;
+        card.innerHTML = `<h3>${kpi.title}</h3><div class="value">${kpi.value.toLocaleString('pt-BR')}</div>`;
         container.appendChild(card);
     });
 }
 
-function renderChartRisco() {
-    const data = filteredData.atendimento_risco || [];
+function renderChartRisco(data) {
+    const chartData = data.atendimento_risco || [];
     const grouped = {};
-    data.forEach(row => {
+    chartData.forEach(row => {
         grouped[row.Classificacao] = (grouped[row.Classificacao] || 0) + parseInt(row.Quantidade || 0);
     });
 
@@ -267,10 +257,10 @@ function renderChartRisco() {
     });
 }
 
-function renderChartSexo() {
-    const data = filteredData.atendimento_sexo || [];
+function renderChartSexo(data) {
+    const chartData = data.atendimento_sexo || [];
     const grouped = {};
-    data.forEach(row => {
+    chartData.forEach(row => {
         grouped[row.Sexo] = (grouped[row.Sexo] || 0) + parseInt(row.Quantidade || 0);
     });
 
@@ -301,10 +291,10 @@ function renderChartSexo() {
     });
 }
 
-function renderChartMunicipio() {
-    const data = filteredData.atendimento_municipio || [];
+function renderChartMunicipio(data) {
+    const chartData = data.atendimento_municipio || [];
     const grouped = {};
-    data.forEach(row => {
+    chartData.forEach(row => {
         grouped[row.Municipio] = (grouped[row.Municipio] || 0) + parseInt(row.Quantidade || 0);
     });
 
@@ -338,49 +328,14 @@ function renderChartMunicipio() {
     });
 }
 
-function renderTableTemposAtendimento() {
-    const data = allData.atendimento_limite_tempo || [];
-    const container = document.getElementById('tableTemposContainer');
-    if (!container) return;
-    
-    let html = '<h3>⏱️ Tempo de Atendimento por Classificação de Risco</h3>';
-    html += '<table><thead><tr><th>Classificação</th><th>Dentro do Limite</th><th>% Dentro</th><th>Acima do Limite</th><th>% Acima</th></tr></thead><tbody>';
-
-    const grouped = {};
-    data.forEach(row => {
-        const key = row['Classificação de risco'] || row.Classificacao || 'Desconhecido';
-        if (!grouped[key]) {
-            grouped[key] = { dentro: 0, acima: 0 };
-        }
-        grouped[key].dentro += parseInt(row['Quantidade de atendimento dentro do limite de tempo'] || 0);
-        grouped[key].acima += parseInt(row['Quantidade de atendimento acima do limite de tempo'] || 0);
-    });
-
-    Object.entries(grouped).forEach(([risco, valores]) => {
-        const total = valores.dentro + valores.acima;
-        const pctDentro = total > 0 ? ((valores.dentro / total) * 100).toFixed(1) : 0;
-        const pctAcima = total > 0 ? ((valores.acima / total) * 100).toFixed(1) : 0;
-        html += `<tr>
-            <td><strong>${risco}</strong></td>
-            <td class="text-right">${valores.dentro.toLocaleString('pt-BR')}</td>
-            <td class="text-right">${pctDentro}%</td>
-            <td class="text-right">${valores.acima.toLocaleString('pt-BR')}</td>
-            <td class="text-right">${pctAcima}%</td>
-        </tr>`;
-    });
-
-    html += '</tbody></table>';
-    container.innerHTML = html;
-}
-
-function renderTableCID() {
-    const data = filteredData.atendimento_cid || [];
+function renderTableCID(data) {
+    const chartData = data.atendimento_cid || [];
     const tbody = document.querySelector('#tableCID tbody');
     if (!tbody) return;
     
     tbody.innerHTML = '';
 
-    const sorted = data.sort((a, b) => parseInt(b.Quantidade || 0) - parseInt(a.Quantidade || 0)).slice(0, 50);
+    const sorted = chartData.sort((a, b) => parseInt(b.Quantidade || 0) - parseInt(a.Quantidade || 0)).slice(0, 50);
 
     sorted.forEach((row, index) => {
         const tr = document.createElement('tr');
@@ -394,23 +349,26 @@ function renderTableCID() {
     });
 }
 
+// ===== ABA ASSISTENCIAL =====
 function renderAssistencial() {
-    renderKPIAssistencial();
-    renderChartOxigenio();
-    renderTableLab();
-    renderTableRadiografia();
-    renderTableProcedimentos();
+    const data = getFilteredData();
+    
+    renderKPIAssistencial(data);
+    renderChartOxigenio(data);
+    renderTableLab(data);
+    renderTableRadiografia(data);
+    renderTableProcedimentos(data);
 }
 
-function renderKPIAssistencial() {
+function renderKPIAssistencial(data) {
     const container = document.getElementById('kpiAssistencial');
     if (!container) return;
     container.innerHTML = '';
 
-    const totalOxy = filteredData.logistica_oxigenio?.reduce((sum, row) => sum + parseFloat(row.M3 || 0), 0) || 0;
-    const totalLab = filteredData.exames_laboratoriais?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const totalRad = filteredData.radiografias?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const totalProc = filteredData.procedimentos?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
+    const totalOxy = (data.logistica_oxigenio || []).reduce((sum, row) => sum + parseFloat(row.M3 || 0), 0);
+    const totalLab = (data.exames_laboratoriais || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const totalRad = (data.radiografias || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const totalProc = (data.procedimentos || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
 
     const kpis = [
         { title: 'Consumo Oxigênio (M³)', value: totalOxy.toFixed(0), class: 'primary' },
@@ -422,18 +380,15 @@ function renderKPIAssistencial() {
     kpis.forEach(kpi => {
         const card = document.createElement('div');
         card.className = `kpi-card ${kpi.class}`;
-        card.innerHTML = `
-            <h3>${kpi.title}</h3>
-            <div class="value">${kpi.value.toLocaleString('pt-BR')}</div>
-        `;
+        card.innerHTML = `<h3>${kpi.title}</h3><div class="value">${kpi.value.toLocaleString('pt-BR')}</div>`;
         container.appendChild(card);
     });
 }
 
-function renderChartOxigenio() {
-    const data = filteredData.logistica_oxigenio || [];
+function renderChartOxigenio(data) {
+    const chartData = data.logistica_oxigenio || [];
     const grouped = {};
-    data.forEach(row => {
+    chartData.forEach(row => {
         grouped[row.Tipo] = (grouped[row.Tipo] || 0) + parseFloat(row.M3 || 0);
     });
 
@@ -470,10 +425,10 @@ function renderChartOxigenio() {
     });
 }
 
-function renderTableLab() {
-    const data = filteredData.exames_laboratoriais || [];
+function renderTableLab(data) {
+    const chartData = data.exames_laboratoriais || [];
     const grouped = {};
-    data.forEach(row => {
+    chartData.forEach(row => {
         const examCode = row.Exame.split(' - ')[1]?.trim() || row.Exame;
         grouped[examCode] = (grouped[examCode] || 0) + parseInt(row.Quantidade || 0);
     });
@@ -494,10 +449,10 @@ function renderTableLab() {
     container.innerHTML = html;
 }
 
-function renderTableRadiografia() {
-    const data = filteredData.radiografias || [];
+function renderTableRadiografia(data) {
+    const chartData = data.radiografias || [];
     const grouped = {};
-    data.forEach(row => {
+    chartData.forEach(row => {
         const examCode = row.Exame.split(' - ')[1]?.trim() || row.Exame;
         grouped[examCode] = (grouped[examCode] || 0) + parseInt(row.Quantidade || 0);
     });
@@ -518,10 +473,10 @@ function renderTableRadiografia() {
     container.innerHTML = html;
 }
 
-function renderTableProcedimentos() {
-    const data = filteredData.procedimentos || [];
+function renderTableProcedimentos(data) {
+    const chartData = data.procedimentos || [];
     const grouped = {};
-    data.forEach(row => {
+    chartData.forEach(row => {
         const procCode = row.Procedimento.split(' - ')[1]?.trim() || row.Procedimento;
         grouped[procCode] = (grouped[procCode] || 0) + parseInt(row.Quantidade || 0);
     });
@@ -542,26 +497,29 @@ function renderTableProcedimentos() {
     container.innerHTML = html;
 }
 
+// ===== ABA OPERACIONAL =====
 function renderOperacional() {
-    renderKPIOperacional();
-    renderChartInternacaoTipo();
-    renderChartTransporte();
-    renderChartResiduos();
-    renderChartLavanderia();
+    const data = getFilteredData();
+    
+    renderKPIOperacional(data);
+    renderChartInternacaoTipo(data);
+    renderChartTransporte(data);
+    renderChartResiduos(data);
+    renderChartLavanderia(data);
 }
 
-function renderKPIOperacional() {
+function renderKPIOperacional(data) {
     const container = document.getElementById('kpiOperacional');
     if (!container) return;
     container.innerHTML = '';
 
-    const totalInternacoes = filteredData.internacoes_tipo?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const totalAtendimentos = filteredData.atendimento_geral_mensal?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
+    const totalInternacoes = (data.internacoes_tipo || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const totalAtendimentos = (data.atendimento_geral_mensal || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
     const taxaOcupacao = totalAtendimentos > 0 ? ((totalInternacoes / totalAtendimentos) * 100).toFixed(2) : 0;
     
-    const totalResiduos = filteredData.logistica_residuos?.reduce((sum, row) => sum + parseFloat(row.KG || 0), 0) || 0;
-    const totalLavanderia = filteredData.logistica_lavanderia?.reduce((sum, row) => sum + parseFloat(row.Peso || 0), 0) || 0;
-    const totalTransporte = filteredData.logistica_transporte?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
+    const totalResiduos = (data.logistica_residuos || []).reduce((sum, row) => sum + parseFloat(row.KG || 0), 0);
+    const totalLavanderia = (data.logistica_lavanderia || []).reduce((sum, row) => sum + parseFloat(row.Peso || 0), 0);
+    const totalTransporte = (data.logistica_transporte || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
 
     const kpis = [
         { title: 'Total Internações', value: totalInternacoes, class: 'primary' },
@@ -574,18 +532,15 @@ function renderKPIOperacional() {
     kpis.forEach(kpi => {
         const card = document.createElement('div');
         card.className = `kpi-card ${kpi.class}`;
-        card.innerHTML = `
-            <h3>${kpi.title}</h3>
-            <div class="value">${kpi.value.toLocaleString('pt-BR')}</div>
-        `;
+        card.innerHTML = `<h3>${kpi.title}</h3><div class="value">${kpi.value.toLocaleString('pt-BR')}</div>`;
         container.appendChild(card);
     });
 }
 
-function renderChartInternacaoTipo() {
-    const data = filteredData.internacoes_tipo || [];
+function renderChartInternacaoTipo(data) {
+    const chartData = data.internacoes_tipo || [];
     const grouped = {};
-    data.forEach(row => {
+    chartData.forEach(row => {
         grouped[row.Tipo] = (grouped[row.Tipo] || 0) + parseInt(row.Quantidade || 0);
     });
 
@@ -626,10 +581,10 @@ function renderChartInternacaoTipo() {
     });
 }
 
-function renderChartTransporte() {
-    const data = filteredData.logistica_transporte || [];
+function renderChartTransporte(data) {
+    const chartData = data.logistica_transporte || [];
     const grouped = {};
-    data.forEach(row => {
+    chartData.forEach(row => {
         grouped[row.Destino] = (grouped[row.Destino] || 0) + parseInt(row.Quantidade || 0);
     });
 
@@ -663,10 +618,10 @@ function renderChartTransporte() {
     });
 }
 
-function renderChartResiduos() {
-    const data = filteredData.logistica_residuos || [];
+function renderChartResiduos(data) {
+    const chartData = data.logistica_residuos || [];
     const grouped = {};
-    data.forEach(row => {
+    chartData.forEach(row => {
         grouped[row.Grupo] = (grouped[row.Grupo] || 0) + parseFloat(row.KG || 0);
     });
 
@@ -703,9 +658,9 @@ function renderChartResiduos() {
     });
 }
 
-function renderChartLavanderia() {
-    const data = filteredData.logistica_lavanderia || [];
-    const sorted = data.sort((a, b) => a.Mes.localeCompare(b.Mes));
+function renderChartLavanderia(data) {
+    const chartData = data.logistica_lavanderia || [];
+    const sorted = chartData.sort((a, b) => a.Mes.localeCompare(b.Mes));
 
     const canvas = document.getElementById('chartLavanderia');
     if (!canvas) return;
@@ -737,39 +692,38 @@ function renderChartLavanderia() {
     });
 }
 
+// ===== ABA INSIGHTS =====
 function renderInsights() {
-    renderInsightsMetricas();
-}
-
-function renderInsightsMetricas() {
+    const data = getFilteredData();
+    
     const container = document.getElementById('insightsContent');
     if (!container) return;
     
-    const totalAtend = filteredData.atendimento_geral_mensal?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
-    const totalIntern = filteredData.internacoes_tipo?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
+    const totalAtend = (data.atendimento_geral_mensal || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
+    const totalIntern = (data.internacoes_tipo || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
     const taxaOcupacao = totalAtend > 0 ? ((totalIntern / totalAtend) * 100).toFixed(2) : 0;
     
     const riscosData = {};
-    (filteredData.atendimento_risco || []).forEach(row => {
+    (data.atendimento_risco || []).forEach(row => {
         riscosData[row.Classificacao] = (riscosData[row.Classificacao] || 0) + parseInt(row.Quantidade || 0);
     });
 
     const sexoData = {};
-    (filteredData.atendimento_sexo || []).forEach(row => {
+    (data.atendimento_sexo || []).forEach(row => {
         sexoData[row.Sexo] = (sexoData[row.Sexo] || 0) + parseInt(row.Quantidade || 0);
     });
 
     const municipioData = {};
-    (filteredData.atendimento_municipio || []).forEach(row => {
+    (data.atendimento_municipio || []).forEach(row => {
         municipioData[row.Municipio] = (municipioData[row.Municipio] || 0) + parseInt(row.Quantidade || 0);
     });
 
     const topMunicipios = Object.entries(municipioData).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-    const totalOxy = filteredData.logistica_oxigenio?.reduce((sum, row) => sum + parseFloat(row.M3 || 0), 0) || 0;
-    const totalResiduos = filteredData.logistica_residuos?.reduce((sum, row) => sum + parseFloat(row.KG || 0), 0) || 0;
-    const totalLavanderia = filteredData.logistica_lavanderia?.reduce((sum, row) => sum + parseFloat(row.Peso || 0), 0) || 0;
-    const totalTransporte = filteredData.logistica_transporte?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
+    const totalOxy = (data.logistica_oxigenio || []).reduce((sum, row) => sum + parseFloat(row.M3 || 0), 0);
+    const totalResiduos = (data.logistica_residuos || []).reduce((sum, row) => sum + parseFloat(row.KG || 0), 0);
+    const totalLavanderia = (data.logistica_lavanderia || []).reduce((sum, row) => sum + parseFloat(row.Peso || 0), 0);
+    const totalTransporte = (data.logistica_transporte || []).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0);
 
     let html = `
         <div class="metrics-grid">
@@ -840,7 +794,7 @@ function renderInsightsMetricas() {
     container.innerHTML = html;
 }
 
-// Funções auxiliares
+// ===== FUNÇÕES DE NAVEGAÇÃO =====
 function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -852,19 +806,9 @@ function showTab(tabName) {
     
     event.target.classList.add('active');
 
-    // Renderizar conteúdo da aba
     if (tabName === 'executivo') renderExecutivo();
     else if (tabName === 'atendimento') renderAtendimento();
     else if (tabName === 'assistencial') renderAssistencial();
     else if (tabName === 'operacional') renderOperacional();
     else if (tabName === 'insights') renderInsights();
 }
-
-function formatMes(mesStr) {
-    if (!mesStr) return '-';
-    const [year, month] = mesStr.split('-');
-    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    return `${monthNames[parseInt(month) - 1]}/${year}`;
-}
-
-// Inicializar ao carregar a página (removido - já está no index.html)
