@@ -405,10 +405,10 @@
             const container = document.getElementById('kpiAssistencial');
             container.innerHTML = '';
 
-            const oxy = (d.logistica_oxigenio || []).reduce((s, r) => s + parseFloat(r.M3 || 0), 0);
-            const lab = (d.exames_laboratoriais || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const rad = (d.radiografias || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const proc = (d.procedimentos || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+            const oxy = (allData.logistica_oxigenio || []).reduce((s, r) => s + parseFloat(r.M3 || 0), 0);
+            const lab = (allData.exames_laboratoriais || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+            const rad = (allData.radiografias || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+            const proc = (allData.procedimentos || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
 
             [
                 { t: 'Oxigênio (M³)', v: oxy.toFixed(0), c: 'primary' },
@@ -423,7 +423,7 @@
             });
 
             const oxyData = {};
-            (d.logistica_oxigenio || []).forEach(r => {
+            (allData.logistica_oxigenio || []).forEach(r => {
                 oxyData[r.Tipo] = (oxyData[r.Tipo] || 0) + parseFloat(r.M3 || 0);
             });
             const ctx = document.getElementById('chartOxigenio').getContext('2d');
@@ -440,9 +440,10 @@
 
             // Tabela Exames Laboratoriais
             const labByMes = {};
-            (d.exames_laboratoriais || []).forEach(r => {
-                if (!labByMes[r.Mes]) labByMes[r.Mes] = 0;
-                labByMes[r.Mes] += parseInt(r.Quantidade || 0);
+            (allData.exames_laboratoriais || []).forEach(r => {
+                const mesFormatado = formatMes(r.Mes);
+                if (!labByMes[mesFormatado]) labByMes[mesFormatado] = 0;
+                labByMes[mesFormatado] += parseInt(r.Quantidade || 0);
             });
             let labHtml = '<h3>🔬 Exames Laboratoriais por Mês</h3><table><thead><tr><th>Mês</th><th>Quantidade Total</th></tr></thead><tbody>';
             Object.entries(labByMes).sort((a, b) => a[0].localeCompare(b[0])).forEach(([mes, qty]) => {
@@ -453,9 +454,10 @@
 
             // Tabela Radiografias
             const radByMes = {};
-            (d.radiografias || []).forEach(r => {
-                if (!radByMes[r.Mes]) radByMes[r.Mes] = 0;
-                radByMes[r.Mes] += parseInt(r.Quantidade || 0);
+            (allData.radiografias || []).forEach(r => {
+                const mesFormatado = formatMes(r.Mes);
+                if (!radByMes[mesFormatado]) radByMes[mesFormatado] = 0;
+                radByMes[mesFormatado] += parseInt(r.Quantidade || 0);
             });
             let radHtml = '<h3>🖼️ Radiografias por Mês</h3><table><thead><tr><th>Mês</th><th>Quantidade Total</th></tr></thead><tbody>';
             Object.entries(radByMes).sort((a, b) => a[0].localeCompare(b[0])).forEach(([mes, qty]) => {
@@ -466,9 +468,10 @@
 
             // Tabela Procedimentos
             const procByMes = {};
-            (d.procedimentos || []).forEach(r => {
-                if (!procByMes[r.Mes]) procByMes[r.Mes] = 0;
-                procByMes[r.Mes] += parseInt(r.Quantidade || 0);
+            (allData.procedimentos || []).forEach(r => {
+                const mesFormatado = formatMes(r.Mes);
+                if (!procByMes[mesFormatado]) procByMes[mesFormatado] = 0;
+                procByMes[mesFormatado] += parseInt(r.Quantidade || 0);
             });
             let procHtml = '<h3>⚕️ Procedimentos por Mês</h3><table><thead><tr><th>Mês</th><th>Quantidade Total</th></tr></thead><tbody>';
             Object.entries(procByMes).sort((a, b) => a[0].localeCompare(b[0])).forEach(([mes, qty]) => {
@@ -600,11 +603,38 @@
             const lav = (d.logistica_lavanderia || []).reduce((s, r) => s + parseFloat(r.Peso || 0), 0);
             const trans = (d.logistica_transporte || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
 
+            // Calcular análise de tempo de atendimento
+            const tempoTotal = (allData.atendimento_limite_tempo || []).reduce((s, r) => s + r.Dentro_Limite + r.Acima_Limite, 0);
+            const tempoDentro = (allData.atendimento_limite_tempo || []).reduce((s, r) => s + r.Dentro_Limite, 0);
+            const tempoAcima = (allData.atendimento_limite_tempo || []).reduce((s, r) => s + r.Acima_Limite, 0);
+            const pctDentro = tempoTotal > 0 ? ((tempoDentro / tempoTotal) * 100).toFixed(1) : 0;
+            const pctAcima = tempoTotal > 0 ? ((tempoAcima / tempoTotal) * 100).toFixed(1) : 0;
+
             let html = `<div class="metrics-grid">
                 <div class="metric-card"><h4>📊 VOLUME DE ATENDIMENTOS</h4><table class="metrics-table">
                     <tr><td>Total:</td><td><strong>${total.toLocaleString('pt-BR')}</strong></td></tr>
                     <tr><td>Internações:</td><td><strong>${intern.toLocaleString('pt-BR')}</strong></td></tr>
                     <tr><td>Taxa Ocupação:</td><td><strong>${taxa}%</strong></td></tr>
+                </table></div>
+                <div class="metric-card"><h4>⏱️ TEMPO DE ATENDIMENTO</h4><table class="metrics-table">
+                    <tr><td>Total Atendido:</td><td><strong>${tempoTotal.toLocaleString('pt-BR')}</strong></td></tr>
+                    <tr><td>Dentro do Prazo:</td><td><strong>${tempoDentro.toLocaleString('pt-BR')}</strong> (${pctDentro}%)</td></tr>
+                    <tr><td>Acima do Prazo:</td><td><strong>${tempoAcima.toLocaleString('pt-BR')}</strong> (${pctAcima}%)</td></tr>
+                </table></div>
+                <div class="metric-card"><h4>⚠️ CLASSIFICAÇÃO DE RISCO (Tempo)</h4><table class="metrics-table">
+                    ${(() => {
+                        const riscoTempo = {};
+                        (allData.atendimento_limite_tempo || []).forEach(r => {
+                            if (!riscoTempo[r.Classificacao]) riscoTempo[r.Classificacao] = { dentro: 0, acima: 0 };
+                            riscoTempo[r.Classificacao].dentro += r.Dentro_Limite;
+                            riscoTempo[r.Classificacao].acima += r.Acima_Limite;
+                        });
+                        return Object.entries(riscoTempo).map(([k, v]) => {
+                            const total_risco = v.dentro + v.acima;
+                            const pct = total_risco > 0 ? ((v.dentro / total_risco) * 100).toFixed(1) : 0;
+                            return `<tr><td>${k}:</td><td><strong>${pct}%</strong> no prazo</td></tr>`;
+                        }).join('');
+                    })()}
                 </table></div>
                 <div class="metric-card"><h4>⚠️ CLASSIFICAÇÃO DE RISCO</h4><table class="metrics-table">
                     ${Object.entries(risco).map(([k, v]) => `<tr><td>${k}:</td><td><strong>${v.toLocaleString('pt-BR')}</strong> (${((v/total)*100).toFixed(1)}%)</td></tr>`).join('')}
@@ -634,6 +664,7 @@
             </div>`;
 
             container.innerHTML = html;
+            document.getElementById('dataAtualizacao').textContent = new Date().toLocaleDateString('pt-BR');
         }
 
         function showTab(name) {
