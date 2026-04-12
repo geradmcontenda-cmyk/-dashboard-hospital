@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Dashboard Hospitalar - HMC</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -35,11 +38,11 @@
         .chart-container h3 { margin-bottom: 15px; color: #333; }
         .chart-wrapper { position: relative; height: 300px; }
         .chart-container.full-width { grid-column: 1 / -1; }
-        .table-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .table-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; overflow-x: auto; }
         .table-container h3 { margin-bottom: 15px; color: #333; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         table thead { background: #f5f5f5; }
-        table th { padding: 12px; text-align: left; font-weight: 600; color: #0066cc; border-bottom: 2px solid #0066cc; }
+        table th { padding: 12px; text-align: left; font-weight: 600; color: #0066cc; border-bottom: 2px solid #0066cc; white-space: nowrap; }
         table td { padding: 10px 12px; border-bottom: 1px solid #eee; }
         table tbody tr:hover { background: #f9f9f9; }
         .text-right { text-align: right; }
@@ -132,6 +135,7 @@
                 <div class="chart-wrapper"><canvas id="chartMunicipio"></canvas></div>
             </div>
         </div>
+        <div class="table-container full-width" id="tableLimiteTempoContainer"></div>
         <div class="table-container full-width" id="tableCIDContainer"></div>
     </div>
 
@@ -182,17 +186,19 @@
     <script>
         let allData = {};
         let charts = {};
+        const VERSION = Date.now();
 
         async function loadData() {
             try {
-                const response = await fetch('./dashboard_data.json');
+                const response = await fetch('./dashboard_data.json?v=' + VERSION);
                 const data = await response.json();
                 allData = data;
-                console.log('Dados carregados:', Object.keys(allData));
+                console.log('✓ Dados carregados:', Object.keys(allData));
                 initializeFilters();
                 renderExecutivo();
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('✗ Erro ao carregar:', error);
+                alert('Erro ao carregar dados: ' + error.message);
             }
         }
 
@@ -253,6 +259,7 @@
 
         function formatMes(m) {
             if (!m) return '-';
+            if (m.includes('/')) return m;
             const [y, mo] = m.split('-');
             const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
             return `${months[parseInt(mo) - 1]}/${y}`;
@@ -322,7 +329,6 @@
                 container.appendChild(card);
             });
 
-            // Gráfico Risco
             const risco = {};
             (d.atendimento_risco || []).forEach(r => {
                 risco[r.Classificacao] = (risco[r.Classificacao] || 0) + parseInt(r.Quantidade || 0);
@@ -339,7 +345,6 @@
                 plugins: [ChartDataLabels]
             });
 
-            // Gráfico Sexo
             const sexo = {};
             (d.atendimento_sexo || []).forEach(r => {
                 sexo[r.Sexo] = (sexo[r.Sexo] || 0) + parseInt(r.Quantidade || 0);
@@ -355,7 +360,6 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            // Gráfico Município
             const mun = {};
             (d.atendimento_municipio || []).forEach(r => {
                 mun[r.Municipio] = (mun[r.Municipio] || 0) + parseInt(r.Quantidade || 0);
@@ -372,12 +376,25 @@
                 options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
+            // Tabela Limite de Tempo
+            const container_tempo = document.getElementById('tableLimiteTempoContainer');
+            const tempo_data = (d.atendimento_limite_tempo || []).sort((a, b) => {
+                if (a.Classificacao !== b.Classificacao) return a.Classificacao.localeCompare(b.Classificacao);
+                return a.Mes.localeCompare(b.Mes);
+            });
+            let tempo_html = '<h3>⏱️ Atendimentos Dentro/Fora do Prazo</h3><table><thead><tr><th>Classificação</th><th>Mês</th><th>Dentro do Limite</th><th>% Dentro</th><th>Acima do Limite</th><th>% Acima</th></tr></thead><tbody>';
+            tempo_data.forEach(r => {
+                tempo_html += `<tr><td>${r.Classificacao}</td><td>${r.Mes}</td><td class="text-right"><strong>${r.Dentro_Limite.toLocaleString('pt-BR')}</strong></td><td class="text-right">${(r.Pct_Dentro * 100).toFixed(1)}%</td><td class="text-right"><strong>${r.Acima_Limite.toLocaleString('pt-BR')}</strong></td><td class="text-right">${(r.Pct_Acima * 100).toFixed(1)}%</td></tr>`;
+            });
+            tempo_html += '</tbody></table>';
+            container_tempo.innerHTML = tempo_html;
+
             // Tabela CID
             const container2 = document.getElementById('tableCIDContainer');
             const cid = (d.atendimento_cid || []).sort((a, b) => parseInt(b.Quantidade || 0) - parseInt(a.Quantidade || 0)).slice(0, 50);
             let html = '<h3>🏥 Top 50 CID</h3><table><thead><tr><th>#</th><th>CID</th><th>Mês</th><th>Quantidade</th></tr></thead><tbody>';
             cid.forEach((r, i) => {
-                html += `<tr><td>${i + 1}</td><td>${r.CID_Full}</td><td>${formatMes(r.Mes)}</td><td class="text-right"><strong>${parseInt(r.Quantidade || 0).toLocaleString('pt-BR')}</strong></td></tr>`;
+                html += `<tr><td>${i + 1}</td><td>${r.CID_Full}</td><td>${r.Mes}</td><td class="text-right"><strong>${parseInt(r.Quantidade || 0).toLocaleString('pt-BR')}</strong></td></tr>`;
             });
             html += '</tbody></table>';
             container2.innerHTML = html;
@@ -405,7 +422,6 @@
                 container.appendChild(card);
             });
 
-            // Gráfico Oxigênio
             const oxyData = {};
             (d.logistica_oxigenio || []).forEach(r => {
                 oxyData[r.Tipo] = (oxyData[r.Tipo] || 0) + parseFloat(r.M3 || 0);
@@ -422,44 +438,41 @@
                 plugins: [ChartDataLabels]
             });
 
-            // Tabela Exames
-            const labData = {};
+            // Tabela Exames Laboratoriais
+            const labByMes = {};
             (d.exames_laboratoriais || []).forEach(r => {
-                const code = r.Exame.split(' - ')[1]?.trim() || r.Exame;
-                labData[code] = (labData[code] || 0) + parseInt(r.Quantidade || 0);
+                if (!labByMes[r.Mes]) labByMes[r.Mes] = 0;
+                labByMes[r.Mes] += parseInt(r.Quantidade || 0);
             });
-            const labSorted = Object.entries(labData).sort((a, b) => b[1] - a[1]).slice(0, 15);
-            let labHtml = '<h3>🔬 Top 15 Exames Laboratoriais</h3><table><thead><tr><th>Ranking</th><th>Exame</th><th>Quantidade</th></tr></thead><tbody>';
-            labSorted.forEach((item, i) => {
-                labHtml += `<tr><td><strong>${i + 1}</strong></td><td>${item[0]}</td><td class="text-right"><strong>${item[1].toLocaleString('pt-BR')}</strong></td></tr>`;
+            let labHtml = '<h3>🔬 Exames Laboratoriais por Mês</h3><table><thead><tr><th>Mês</th><th>Quantidade Total</th></tr></thead><tbody>';
+            Object.entries(labByMes).sort((a, b) => a[0].localeCompare(b[0])).forEach(([mes, qty]) => {
+                labHtml += `<tr><td>${mes}</td><td class="text-right"><strong>${qty.toLocaleString('pt-BR')}</strong></td></tr>`;
             });
             labHtml += '</tbody></table>';
             document.getElementById('tableLabContainer').innerHTML = labHtml;
 
             // Tabela Radiografias
-            const radData = {};
+            const radByMes = {};
             (d.radiografias || []).forEach(r => {
-                const code = r.Exame.split(' - ')[1]?.trim() || r.Exame;
-                radData[code] = (radData[code] || 0) + parseInt(r.Quantidade || 0);
+                if (!radByMes[r.Mes]) radByMes[r.Mes] = 0;
+                radByMes[r.Mes] += parseInt(r.Quantidade || 0);
             });
-            const radSorted = Object.entries(radData).sort((a, b) => b[1] - a[1]).slice(0, 15);
-            let radHtml = '<h3>🖼️ Top 15 Radiografias</h3><table><thead><tr><th>Ranking</th><th>Radiografia</th><th>Quantidade</th></tr></thead><tbody>';
-            radSorted.forEach((item, i) => {
-                radHtml += `<tr><td><strong>${i + 1}</strong></td><td>${item[0]}</td><td class="text-right"><strong>${item[1].toLocaleString('pt-BR')}</strong></td></tr>`;
+            let radHtml = '<h3>🖼️ Radiografias por Mês</h3><table><thead><tr><th>Mês</th><th>Quantidade Total</th></tr></thead><tbody>';
+            Object.entries(radByMes).sort((a, b) => a[0].localeCompare(b[0])).forEach(([mes, qty]) => {
+                radHtml += `<tr><td>${mes}</td><td class="text-right"><strong>${qty.toLocaleString('pt-BR')}</strong></td></tr>`;
             });
             radHtml += '</tbody></table>';
             document.getElementById('tableRadiografiaContainer').innerHTML = radHtml;
 
             // Tabela Procedimentos
-            const procData = {};
+            const procByMes = {};
             (d.procedimentos || []).forEach(r => {
-                const code = r.Procedimento.split(' - ')[1]?.trim() || r.Procedimento;
-                procData[code] = (procData[code] || 0) + parseInt(r.Quantidade || 0);
+                if (!procByMes[r.Mes]) procByMes[r.Mes] = 0;
+                procByMes[r.Mes] += parseInt(r.Quantidade || 0);
             });
-            const procSorted = Object.entries(procData).sort((a, b) => b[1] - a[1]).slice(0, 15);
-            let procHtml = '<h3>⚕️ Top 15 Procedimentos</h3><table><thead><tr><th>Ranking</th><th>Procedimento</th><th>Quantidade</th></tr></thead><tbody>';
-            procSorted.forEach((item, i) => {
-                procHtml += `<tr><td><strong>${i + 1}</strong></td><td>${item[0]}</td><td class="text-right"><strong>${item[1].toLocaleString('pt-BR')}</strong></td></tr>`;
+            let procHtml = '<h3>⚕️ Procedimentos por Mês</h3><table><thead><tr><th>Mês</th><th>Quantidade Total</th></tr></thead><tbody>';
+            Object.entries(procByMes).sort((a, b) => a[0].localeCompare(b[0])).forEach(([mes, qty]) => {
+                procHtml += `<tr><td>${mes}</td><td class="text-right"><strong>${qty.toLocaleString('pt-BR')}</strong></td></tr>`;
             });
             procHtml += '</tbody></table>';
             document.getElementById('tableProcedimentosContainer').innerHTML = procHtml;
@@ -490,7 +503,6 @@
                 container.appendChild(card);
             });
 
-            // Gráficos
             const internData = {};
             (d.internacoes_tipo || []).forEach(r => {
                 internData[r.Tipo] = (internData[r.Tipo] || 0) + parseInt(r.Quantidade || 0);
