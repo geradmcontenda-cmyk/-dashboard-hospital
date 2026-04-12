@@ -6,8 +6,10 @@ let filteredData = {};
 // Carregar dados
 async function loadData() {
     try {
-        const response = await fetch('dashboard_data.json');
-        allData = await response.json();
+        const response = await fetch('./dashboard_data.json');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+        allData = JSON.parse(text);
         filteredData = JSON.parse(JSON.stringify(allData));
         initializeFilters();
         renderExecutivo();
@@ -91,12 +93,15 @@ function applyFilters() {
     }
 
     // Re-renderizar todas as abas visíveis
-    const activeTab = document.querySelector('.tab-content.active').id;
-    if (activeTab === 'executivo') renderExecutivo();
-    else if (activeTab === 'atendimento') renderAtendimento();
-    else if (activeTab === 'assistencial') renderAssistencial();
-    else if (activeTab === 'operacional') renderOperacional();
-    else if (activeTab === 'insights') renderInsights();
+    const activeTab = document.querySelector('.tab-content.active');
+    if (activeTab) {
+        const tabId = activeTab.id;
+        if (tabId === 'executivo') renderExecutivo();
+        else if (tabId === 'atendimento') renderAtendimento();
+        else if (tabId === 'assistencial') renderAssistencial();
+        else if (tabId === 'operacional') renderOperacional();
+        else if (tabId === 'insights') renderInsights();
+    }
 }
 
 // Funções de renderização
@@ -107,6 +112,7 @@ function renderExecutivo() {
 
 function renderKPIExecutivo() {
     const container = document.getElementById('kpiExecutivo');
+    if (!container) return;
     container.innerHTML = '';
 
     const totalAtendimentos = filteredData.atendimento_geral_mensal?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
@@ -140,7 +146,10 @@ function renderChartEvolucao() {
     const data = filteredData.atendimento_geral_mensal || [];
     const sorted = data.sort((a, b) => a.Mes.localeCompare(b.Mes));
 
-    const ctx = document.getElementById('chartEvolucao').getContext('2d');
+    const canvas = document.getElementById('chartEvolucao');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     if (charts.evolucao) charts.evolucao.destroy();
 
     charts.evolucao = new Chart(ctx, {
@@ -184,6 +193,7 @@ function renderAtendimento() {
 
 function renderKPIAtendimento() {
     const container = document.getElementById('kpiAtendimento');
+    if (!container) return;
     container.innerHTML = '';
 
     const imediato = filteredData.atendimento_risco?.filter(r => r.Classificacao.includes('Imediato')).reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
@@ -218,7 +228,10 @@ function renderChartRisco() {
         grouped[row.Classificacao] = (grouped[row.Classificacao] || 0) + parseInt(row.Quantidade || 0);
     });
 
-    const ctx = document.getElementById('chartRisco').getContext('2d');
+    const canvas = document.getElementById('chartRisco');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     if (charts.risco) charts.risco.destroy();
 
     const colors = ['#ff6b6b', '#ff9900', '#ffd700', '#00aa66', '#0066cc'];
@@ -261,7 +274,10 @@ function renderChartSexo() {
         grouped[row.Sexo] = (grouped[row.Sexo] || 0) + parseInt(row.Quantidade || 0);
     });
 
-    const ctx = document.getElementById('chartSexo').getContext('2d');
+    const canvas = document.getElementById('chartSexo');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     if (charts.sexo) charts.sexo.destroy();
 
     charts.sexo = new Chart(ctx, {
@@ -294,7 +310,10 @@ function renderChartMunicipio() {
 
     const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
-    const ctx = document.getElementById('chartMunicipio').getContext('2d');
+    const canvas = document.getElementById('chartMunicipio');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     if (charts.municipio) charts.municipio.destroy();
 
     charts.municipio = new Chart(ctx, {
@@ -321,15 +340,9 @@ function renderChartMunicipio() {
 
 function renderTableTemposAtendimento() {
     const data = allData.atendimento_limite_tempo || [];
-    const container = document.querySelector('#atendimento .table-container:first-of-type') || 
-                     document.createElement('div');
+    const container = document.getElementById('tableTemposContainer');
+    if (!container) return;
     
-    if (!container.id) {
-        container.className = 'table-container full-width';
-        container.id = 'tableTempos';
-        document.getElementById('atendimento').insertBefore(container, document.getElementById('atendimento').querySelector('.table-container'));
-    }
-
     let html = '<h3>⏱️ Tempo de Atendimento por Classificação de Risco</h3>';
     html += '<table><thead><tr><th>Classificação</th><th>Dentro do Limite</th><th>% Dentro</th><th>Acima do Limite</th><th>% Acima</th></tr></thead><tbody>';
 
@@ -363,6 +376,8 @@ function renderTableTemposAtendimento() {
 function renderTableCID() {
     const data = filteredData.atendimento_cid || [];
     const tbody = document.querySelector('#tableCID tbody');
+    if (!tbody) return;
+    
     tbody.innerHTML = '';
 
     const sorted = data.sort((a, b) => parseInt(b.Quantidade || 0) - parseInt(a.Quantidade || 0)).slice(0, 50);
@@ -389,6 +404,7 @@ function renderAssistencial() {
 
 function renderKPIAssistencial() {
     const container = document.getElementById('kpiAssistencial');
+    if (!container) return;
     container.innerHTML = '';
 
     const totalOxy = filteredData.logistica_oxigenio?.reduce((sum, row) => sum + parseFloat(row.M3 || 0), 0) || 0;
@@ -421,7 +437,10 @@ function renderChartOxigenio() {
         grouped[row.Tipo] = (grouped[row.Tipo] || 0) + parseFloat(row.M3 || 0);
     });
 
-    const ctx = document.getElementById('chartOxigenio').getContext('2d');
+    const canvas = document.getElementById('chartOxigenio');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     if (charts.oxigenio) charts.oxigenio.destroy();
 
     charts.oxigenio = new Chart(ctx, {
@@ -461,14 +480,8 @@ function renderTableLab() {
 
     const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 15);
 
-    const container = document.querySelector('#assistencial .table-container:nth-of-type(1)') || 
-                     document.createElement('div');
-    
-    if (!container.id) {
-        container.className = 'table-container full-width';
-        container.id = 'tableLab';
-        document.getElementById('assistencial').appendChild(container);
-    }
+    const container = document.getElementById('tableLabContainer');
+    if (!container) return;
 
     let html = '<h3>🔬 Top 15 Exames Laboratoriais</h3>';
     html += '<table><thead><tr><th>Ranking</th><th>Exame</th><th>Quantidade</th></tr></thead><tbody>';
@@ -491,14 +504,8 @@ function renderTableRadiografia() {
 
     const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 15);
 
-    const container = document.querySelector('#assistencial .table-container:nth-of-type(2)') || 
-                     document.createElement('div');
-    
-    if (!container.id) {
-        container.className = 'table-container full-width';
-        container.id = 'tableRadiografia';
-        document.getElementById('assistencial').appendChild(container);
-    }
+    const container = document.getElementById('tableRadiografiaContainer');
+    if (!container) return;
 
     let html = '<h3>🖼️ Top 15 Radiografias</h3>';
     html += '<table><thead><tr><th>Ranking</th><th>Radiografia</th><th>Quantidade</th></tr></thead><tbody>';
@@ -521,14 +528,8 @@ function renderTableProcedimentos() {
 
     const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 15);
 
-    const container = document.querySelector('#assistencial .table-container:nth-of-type(3)') || 
-                     document.createElement('div');
-    
-    if (!container.id) {
-        container.className = 'table-container full-width';
-        container.id = 'tableProcedimentos';
-        document.getElementById('assistencial').appendChild(container);
-    }
+    const container = document.getElementById('tableProcedimentosContainer');
+    if (!container) return;
 
     let html = '<h3>⚕️ Top 15 Procedimentos</h3>';
     html += '<table><thead><tr><th>Ranking</th><th>Procedimento</th><th>Quantidade</th></tr></thead><tbody>';
@@ -551,6 +552,7 @@ function renderOperacional() {
 
 function renderKPIOperacional() {
     const container = document.getElementById('kpiOperacional');
+    if (!container) return;
     container.innerHTML = '';
 
     const totalInternacoes = filteredData.internacoes_tipo?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
@@ -587,7 +589,10 @@ function renderChartInternacaoTipo() {
         grouped[row.Tipo] = (grouped[row.Tipo] || 0) + parseInt(row.Quantidade || 0);
     });
 
-    const ctx = document.getElementById('chartInternacaoTipo').getContext('2d');
+    const canvas = document.getElementById('chartInternacaoTipo');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     if (charts.internacaoTipo) charts.internacaoTipo.destroy();
 
     charts.internacaoTipo = new Chart(ctx, {
@@ -630,7 +635,10 @@ function renderChartTransporte() {
 
     const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
 
-    const ctx = document.getElementById('chartTransporte').getContext('2d');
+    const canvas = document.getElementById('chartTransporte');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     if (charts.transporte) charts.transporte.destroy();
 
     charts.transporte = new Chart(ctx, {
@@ -662,7 +670,10 @@ function renderChartResiduos() {
         grouped[row.Grupo] = (grouped[row.Grupo] || 0) + parseFloat(row.KG || 0);
     });
 
-    const ctx = document.getElementById('chartResiduos').getContext('2d');
+    const canvas = document.getElementById('chartResiduos');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     if (charts.residuos) charts.residuos.destroy();
 
     charts.residuos = new Chart(ctx, {
@@ -696,7 +707,10 @@ function renderChartLavanderia() {
     const data = filteredData.logistica_lavanderia || [];
     const sorted = data.sort((a, b) => a.Mes.localeCompare(b.Mes));
 
-    const ctx = document.getElementById('chartLavanderia').getContext('2d');
+    const canvas = document.getElementById('chartLavanderia');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     if (charts.lavanderia) charts.lavanderia.destroy();
 
     charts.lavanderia = new Chart(ctx, {
@@ -729,6 +743,7 @@ function renderInsights() {
 
 function renderInsightsMetricas() {
     const container = document.getElementById('insightsContent');
+    if (!container) return;
     
     const totalAtend = filteredData.atendimento_geral_mensal?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
     const totalIntern = filteredData.internacoes_tipo?.reduce((sum, row) => sum + parseInt(row.Quantidade || 0), 0) || 0;
@@ -830,7 +845,11 @@ function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
     
-    document.getElementById(tabName).classList.add('active');
+    const tabElement = document.getElementById(tabName);
+    if (tabElement) {
+        tabElement.classList.add('active');
+    }
+    
     event.target.classList.add('active');
 
     // Renderizar conteúdo da aba
