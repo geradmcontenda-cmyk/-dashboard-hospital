@@ -11123,5 +11123,321 @@
       "Pct_Dentro": 0.0,
       "Pct_Acima": 0.0
     }
+  ],
+  "faixa_etaria": [
+    {
+      "Mes": "2025-01-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 414
+    },
+    {
+      "Mes": "2025-01-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 154
+    },
+    {
+      "Mes": "2025-01-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 1690
+    },
+    {
+      "Mes": "2025-01-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 439
+    },
+    {
+      "Mes": "2025-02-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 501
+    },
+    {
+      "Mes": "2025-02-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 161
+    },
+    {
+      "Mes": "2025-02-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 1569
+    },
+    {
+      "Mes": "2025-02-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 437
+    },
+    {
+      "Mes": "2025-03-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 923
+    },
+    {
+      "Mes": "2025-03-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 326
+    },
+    {
+      "Mes": "2025-03-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 2092
+    },
+    {
+      "Mes": "2025-03-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 461
+    },
+    {
+      "Mes": "2025-04-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 826
+    },
+    {
+      "Mes": "2025-04-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 272
+    },
+    {
+      "Mes": "2025-04-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 1981
+    },
+    {
+      "Mes": "2025-04-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 464
+    },
+    {
+      "Mes": "2025-05-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 1058
+    },
+    {
+      "Mes": "2025-05-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 296
+    },
+    {
+      "Mes": "2025-05-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 2169
+    },
+    {
+      "Mes": "2025-05-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 504
+    },
+    {
+      "Mes": "2025-06-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 945
+    },
+    {
+      "Mes": "2025-06-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 220
+    },
+    {
+      "Mes": "2025-06-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 1905
+    },
+    {
+      "Mes": "2025-06-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 478
+    },
+    {
+      "Mes": "2025-07-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 675
+    },
+    {
+      "Mes": "2025-07-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 142
+    },
+    {
+      "Mes": "2025-07-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 1872
+    },
+    {
+      "Mes": "2025-07-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 536
+    },
+    {
+      "Mes": "2025-08-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 759
+    },
+    {
+      "Mes": "2025-08-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 227
+    },
+    {
+      "Mes": "2025-08-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 1991
+    },
+    {
+      "Mes": "2025-08-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 503
+    },
+    {
+      "Mes": "2025-09-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 801
+    },
+    {
+      "Mes": "2025-09-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 280
+    },
+    {
+      "Mes": "2025-09-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 1945
+    },
+    {
+      "Mes": "2025-09-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 523
+    },
+    {
+      "Mes": "2025-10-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 846
+    },
+    {
+      "Mes": "2025-10-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 261
+    },
+    {
+      "Mes": "2025-10-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 2001
+    },
+    {
+      "Mes": "2025-10-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 474
+    },
+    {
+      "Mes": "2025-11-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 670
+    },
+    {
+      "Mes": "2025-11-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 205
+    },
+    {
+      "Mes": "2025-11-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 1714
+    },
+    {
+      "Mes": "2025-11-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 480
+    },
+    {
+      "Mes": "2025-12-01",
+      "Faixa_Etaria": "0 a 12 anos (Pediátrico)",
+      "Quantidade": 496
+    },
+    {
+      "Mes": "2025-12-01",
+      "Faixa_Etaria": "13 a 17 anos (Adolescente)",
+      "Quantidade": 139
+    },
+    {
+      "Mes": "2025-12-01",
+      "Faixa_Etaria": "18 a 59 anos (Adulto)",
+      "Quantidade": 1661
+    },
+    {
+      "Mes": "2025-12-01",
+      "Faixa_Etaria": "60 anos ou mais (Idoso)",
+      "Quantidade": 480
+    }
+  ],
+  "rh_movimentacao": [
+    {
+      "Mes": "2025-04",
+      "Atestados": 1,
+      "Faltas": 0,
+      "Advertencias": 0,
+      "Suspensao": 0,
+      "Rescisao": 1
+    },
+    {
+      "Mes": "2025-05",
+      "Atestados": 3,
+      "Faltas": 0,
+      "Advertencias": 1,
+      "Suspensao": 0,
+      "Rescisao": 2
+    },
+    {
+      "Mes": "2025-06",
+      "Atestados": 9,
+      "Faltas": 0,
+      "Advertencias": 2,
+      "Suspensao": 0,
+      "Rescisao": 2
+    },
+    {
+      "Mes": "2025-07",
+      "Atestados": 5,
+      "Faltas": 0,
+      "Advertencias": 1,
+      "Suspensao": 0,
+      "Rescisao": 6
+    },
+    {
+      "Mes": "2025-08",
+      "Atestados": 5,
+      "Faltas": 0,
+      "Advertencias": 5,
+      "Suspensao": 0,
+      "Rescisao": 2
+    },
+    {
+      "Mes": "2025-09",
+      "Atestados": 6,
+      "Faltas": 0,
+      "Advertencias": 7,
+      "Suspensao": 0,
+      "Rescisao": 3
+    },
+    {
+      "Mes": "2025-10",
+      "Atestados": 11,
+      "Faltas": 0,
+      "Advertencias": 2,
+      "Suspensao": 0,
+      "Rescisao": 5
+    },
+    {
+      "Mes": "2025-11",
+      "Atestados": 15,
+      "Faltas": 2,
+      "Advertencias": 9,
+      "Suspensao": 0,
+      "Rescisao": 0
+    },
+    {
+      "Mes": "2025-12",
+      "Atestados": 19,
+      "Faltas": 1,
+      "Advertencias": 1,
+      "Suspensao": 0,
+      "Rescisao": 4
+    }
   ]
 }

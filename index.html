@@ -116,6 +116,7 @@
         <button class="tab-button" onclick="showTab('atendimento')">📊 Atendimento</button>
         <button class="tab-button" onclick="showTab('assistencial')">🩺 Assistencial</button>
         <button class="tab-button" onclick="showTab('operacional')">🚑 Operacional</button>
+        <button class="tab-button" onclick="showTab('rh')">👥 Recursos Humanos</button>
         <button class="tab-button" onclick="showTab('insights')">🔍 Insights</button>
     </div>
 
@@ -143,6 +144,10 @@
             <div class="chart-container">
                 <h3>📍 Top 10 Municípios</h3>
                 <div class="chart-wrapper"><canvas id="chartMunicipio"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h3>👶 Distribuição por Faixa Etária</h3>
+                <div class="chart-wrapper"><canvas id="chartFaixaEtaria"></canvas></div>
             </div>
         </div>
         <div class="table-container full-width" id="tableLimiteTempoContainer"></div>
@@ -182,6 +187,17 @@
                 <div class="chart-wrapper"><canvas id="chartLavanderia"></canvas></div>
             </div>
         </div>
+    </div>
+
+    <div id="rh" class="tab-content">
+        <div class="kpi-cards" id="kpiRH"></div>
+        <div class="charts-grid">
+            <div class="chart-container full-width">
+                <h3>📊 Evolução Mensal de Indicadores de RH</h3>
+                <div class="chart-wrapper"><canvas id="chartRHEvolucao"></canvas></div>
+            </div>
+        </div>
+        <div class="table-container full-width" id="tableRHContainer"></div>
     </div>
 
     <div id="insights" class="tab-content">
@@ -397,12 +413,33 @@
                 options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
+            const faixa = {};
+            (d.faixa_etaria || []).forEach(r => {
+                faixa[r.Faixa_Etaria] = (faixa[r.Faixa_Etaria] || 0) + parseInt(r.Quantidade || 0);
+            });
+            const ctx4 = document.getElementById('chartFaixaEtaria').getContext('2d');
+            if (charts.faixaEtaria) charts.faixaEtaria.destroy();
+            charts.faixaEtaria = new Chart(ctx4, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(faixa),
+                    datasets: [{ data: Object.values(faixa), backgroundColor: ['#0066cc', '#00aa66', '#ff9900', '#ff6b6b'], borderColor: '#fff', borderWidth: 2 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+                plugins: [ChartDataLabels]
+            });
+
             // Tabela Limite de Tempo
             const container_tempo = document.getElementById('tableLimiteTempoContainer');
-            const tempo_data = (d.atendimento_limite_tempo || []).sort((a, b) => {
+            const mes_selecionado = document.getElementById('filterMes').value;
+            let tempo_data = (d.atendimento_limite_tempo || []).sort((a, b) => {
                 if (a.Classificacao !== b.Classificacao) return a.Classificacao.localeCompare(b.Classificacao);
                 return a.Mes.localeCompare(b.Mes);
             });
+            // Filtrar por mês se selecionado
+            if (mes_selecionado) {
+                tempo_data = tempo_data.filter(r => formatMesAno(r.Mes) === mes_selecionado);
+            }
             let tempo_html = '<h3>⏱️ Atendimentos Dentro/Fora do Prazo</h3><table><thead><tr><th>Classificação</th><th>Mês</th><th>Dentro do Limite</th><th>% Dentro</th><th>Acima do Limite</th><th>% Acima</th></tr></thead><tbody>';
             tempo_data.forEach(r => {
                 tempo_html += `<tr><td>${r.Classificacao}</td><td>${r.Mes}</td><td class="text-right"><strong>${r.Dentro_Limite.toLocaleString('pt-BR')}</strong></td><td class="text-right">${(r.Pct_Dentro * 100).toFixed(1)}%</td><td class="text-right"><strong>${r.Acima_Limite.toLocaleString('pt-BR')}</strong></td><td class="text-right">${(r.Pct_Acima * 100).toFixed(1)}%</td></tr>`;
@@ -412,7 +449,13 @@
 
             // Tabela CID
             const container2 = document.getElementById('tableCIDContainer');
-            const cid = (d.atendimento_cid || []).sort((a, b) => parseInt(b.Quantidade || 0) - parseInt(a.Quantidade || 0)).slice(0, 50);
+            const mes_filtro = document.getElementById('filterMes').value;
+            let cid_data = (d.atendimento_cid || []);
+            // Filtrar por mês se selecionado
+            if (mes_filtro) {
+                cid_data = cid_data.filter(r => formatMesAno(r.Mes) === mes_filtro);
+            }
+            const cid = cid_data.sort((a, b) => parseInt(b.Quantidade || 0) - parseInt(a.Quantidade || 0)).slice(0, 50);
             let html = '<h3>🏥 Top 50 CID</h3><table><thead><tr><th>#</th><th>CID</th><th>Mês</th><th>Quantidade</th></tr></thead><tbody>';
             cid.forEach((r, i) => {
                 html += `<tr><td>${i + 1}</td><td>${r.CID_Full}</td><td>${formatMesAno(r.Mes)}</td><td class="text-right"><strong>${parseInt(r.Quantidade || 0).toLocaleString('pt-BR')}</strong></td></tr>`;
@@ -700,6 +743,51 @@
             document.getElementById('dataAtualizacao').textContent = new Date().toLocaleDateString('pt-BR');
         }
 
+
+        function renderRH() {
+            const d = getFiltered();
+            const container = document.getElementById('kpiRH');
+            container.innerHTML = '';
+
+            const atestados = (d.rh_movimentacao || []).reduce((s, r) => s + r.Atestados, 0);
+            const faltas = (d.rh_movimentacao || []).reduce((s, r) => s + r.Faltas, 0);
+            const advertencias = (d.rh_movimentacao || []).reduce((s, r) => s + r.Advertencias, 0);
+            const suspensao = (d.rh_movimentacao || []).reduce((s, r) => s + r.Suspensao, 0);
+            const rescisao = (d.rh_movimentacao || []).reduce((s, r) => s + r.Rescisao, 0);
+
+            [{ t: 'Atestados', v: atestados, c: 'warning' }, { t: 'Faltas', v: faltas, c: 'primary' }, { t: 'Advertências', v: advertencias, c: 'secondary' }, { t: 'Suspensão', v: suspensao, c: 'warning' }, { t: 'Rescisões', v: rescisao, c: 'primary' }].forEach(kpi => {
+                const card = document.createElement('div');
+                card.className = `kpi-card ${kpi.c}`;
+                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v.toLocaleString('pt-BR')}</div>`;
+                container.appendChild(card);
+            });
+
+            const rhData = (d.rh_movimentacao || []).sort((a, b) => a.Mes.localeCompare(b.Mes));
+            const ctx = document.getElementById('chartRHEvolucao').getContext('2d');
+            if (charts.rhEvolucao) charts.rhEvolucao.destroy();
+            charts.rhEvolucao = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: rhData.map(r => formatMesAno(r.Mes + '-01')),
+                    datasets: [
+                        { label: 'Atestados', data: rhData.map(r => r.Atestados), borderColor: '#ff9900', backgroundColor: 'rgba(255, 153, 0, 0.1)', tension: 0.4, fill: true },
+                        { label: 'Faltas', data: rhData.map(r => r.Faltas), borderColor: '#ff6b6b', backgroundColor: 'rgba(255, 107, 107, 0.1)', tension: 0.4, fill: true },
+                        { label: 'Advertências', data: rhData.map(r => r.Advertencias), borderColor: '#0066cc', backgroundColor: 'rgba(0, 102, 204, 0.1)', tension: 0.4, fill: true },
+                        { label: 'Suspensão', data: rhData.map(r => r.Suspensao), borderColor: '#00aa66', backgroundColor: 'rgba(0, 170, 102, 0.1)', tension: 0.4, fill: true },
+                        { label: 'Rescisões', data: rhData.map(r => r.Rescisao), borderColor: '#9933cc', backgroundColor: 'rgba(153, 51, 204, 0.1)', tension: 0.4, fill: true }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom' } } }
+            });
+
+            let tableHtml = '<h3>📋 Resumo Mensal de Indicadores de RH</h3><table><thead><tr><th>Mês</th><th>Atestados</th><th>Faltas</th><th>Advertências</th><th>Suspensão</th><th>Rescisões</th></tr></thead><tbody>';
+            rhData.forEach(r => {
+                tableHtml += `<tr><td>${formatMesAno(r.Mes + '-01')}</td><td class="text-right">${r.Atestados}</td><td class="text-right">${r.Faltas}</td><td class="text-right">${r.Advertencias}</td><td class="text-right">${r.Suspensao}</td><td class="text-right">${r.Rescisao}</td></tr>`;
+            });
+            tableHtml += '</tbody></table>';
+            document.getElementById('tableRHContainer').innerHTML = tableHtml;
+        }
+
         function showTab(name) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
@@ -709,6 +797,7 @@
             else if (name === 'atendimento') renderAtendimento();
             else if (name === 'assistencial') renderAssistencial();
             else if (name === 'operacional') renderOperacional();
+            else if (name === 'rh') renderRH();
             else if (name === 'insights') renderInsights();
         }
 
