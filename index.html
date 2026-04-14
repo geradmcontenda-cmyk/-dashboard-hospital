@@ -4,42 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>Dashboard Hospitalar - HMC</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; }
         .header { background: linear-gradient(135deg, #0066cc 0%, #004499 100%); color: white; padding: 20px; }
         .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
-        .header-logos { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
-        .header-logos img { height: 50px; background: white; padding: 5px; border-radius: 5px; }
         .header-title h1 { font-size: 24px; margin-bottom: 5px; }
         .header-title p { font-size: 14px; opacity: 0.9; }
-        .filters { background: white; padding: 20px; margin: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .filters { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
         .filter-group { display: flex; flex-direction: column; }
         .filter-group label { font-weight: 600; margin-bottom: 8px; color: #0066cc; font-size: 13px; }
         .filter-group select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; cursor: pointer; }
         .filter-group select:hover { border-color: #0066cc; }
-        .tabs { display: flex; gap: 10px; padding: 20px; background: white; border-bottom: 2px solid #0066cc; overflow-x: auto; flex-wrap: wrap; }
-        .tab-button { padding: 10px 20px; border: none; background: #f0f0f0; cursor: pointer; border-radius: 5px; font-weight: 600; transition: all 0.3s; font-size: 14px; }
-        .tab-button:hover { background: #e0e0e0; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; flex-wrap: wrap; }
+        .tab-button { padding: 10px 20px; border: none; background: #f0f0f0; cursor: pointer; border-radius: 5px; font-weight: 600; transition: all 0.3s; }
         .tab-button.active { background: #0066cc; color: white; }
-        .tab-content { display: none; padding: 20px; }
+        .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .kpi-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .kpi-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; border-left: 4px solid #0066cc; }
         .kpi-card h3 { font-size: 12px; color: #666; margin-bottom: 10px; text-transform: uppercase; font-weight: 600; }
         .kpi-card .value { font-size: 28px; font-weight: bold; color: #0066cc; }
-        .kpi-card.secondary { border-left-color: #00aa66; }
-        .kpi-card.secondary .value { color: #00aa66; }
-        .kpi-card.warning { border-left-color: #ff9900; }
-        .kpi-card.warning .value { color: #ff9900; }
-        .kpi-card.primary { border-left-color: #0066cc; }
-        .kpi-card.primary .value { color: #0066cc; }
         .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .chart-container h3 { margin-bottom: 15px; color: #333; font-size: 16px; font-weight: 600; }
@@ -48,233 +37,139 @@
         .table-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; overflow-x: auto; }
         .table-container h3 { margin-bottom: 15px; color: #333; font-size: 16px; font-weight: 600; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        table thead { background: linear-gradient(135deg, #0066cc 0%, #004499 100%); }
-        table th { padding: 12px; text-align: center; font-weight: 600; color: white; border-bottom: 2px solid #0066cc; white-space: nowrap; }
-        table td { padding: 10px 12px; border-bottom: 1px solid #eee; text-align: center; }
-        table tbody tr:nth-child(even) { background: #f9f9f9; }
-        table tbody tr:hover { background: #f0f5ff; }
+        thead { background: #0066cc; color: white; }
+        th { padding: 12px; text-align: left; font-weight: 600; }
+        td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+        tbody tr:hover { background: #f9f9f9; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .text-left { text-align: left; }
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .metric-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-top: 3px solid #0066cc; }
-        .metric-card h4 { color: #0066cc; margin-bottom: 15px; font-size: 14px; font-weight: 600; }
-        .metrics-table { width: 100%; font-size: 13px; }
-        .metrics-table tr { border-bottom: 1px solid #eee; }
-        .metrics-table tr:nth-child(even) { background: #f9f9f9; }
-        .metrics-table td { padding: 8px 0; }
-        .metrics-table td:first-child { color: #666; font-weight: 500; }
-        .metrics-table td:last-child { text-align: right; font-weight: 600; color: #0066cc; }
-        .warning-message { background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 12px; border-radius: 5px; margin-bottom: 15px; }
-        .footer { background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); padding: 20px; text-align: center; color: #666; font-size: 12px; margin-top: 40px; border-top: 1px solid #ddd; }
-        .footer-credit { font-size: 11px; color: #999; margin-top: 10px; }
-        @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } .header-content { flex-direction: column; text-align: center; } }
-        @media (max-width: 768px) { .filter-grid { grid-template-columns: 1fr; } .kpi-cards { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 480px) { .kpi-cards { grid-template-columns: 1fr; } .tabs { flex-direction: column; } .tab-button { width: 100%; } }
+        .footer { text-align: center; padding: 20px; color: #999; font-size: 12px; margin-top: 40px; }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <div class="header-logos">
-                <img src="logo_contenda.png" alt="Prefeitura" onerror="this.style.display='none'">
-                <img src="logo_hmc.png" alt="HMC" onerror="this.style.display='none'">
-                <img src="logo_patris.png" alt="Instituto Patris" onerror="this.style.display='none'">
-            </div>
             <div class="header-title">
-                <h1>🏥 Dashboard Hospitalar</h1>
+                <h1>📊 Dashboard Hospitalar</h1>
                 <p>Hospital e Maternidade Miquelina Franco e Elisa Padilha</p>
             </div>
         </div>
     </div>
 
-    <div class="filters">
-        <div class="filter-grid">
-            <div class="filter-group">
-                <label for="filterMes">📅 Período (Mês/Ano)</label>
-                <select id="filterMes" onchange="applyFilters()">
-                    <option value="">Todos os Períodos</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="filterRisco">⚠️ Classificação de Risco</label>
-                <select id="filterRisco" onchange="applyFilters()">
-                    <option value="">Todas as Classificações</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="filterSexo">👥 Sexo</label>
-                <select id="filterSexo" onchange="applyFilters()">
-                    <option value="">Todos os Sexos</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="filterMunicipio">🏘️ Município</label>
-                <select id="filterMunicipio" onchange="applyFilters()">
-                    <option value="">Todos os Municípios</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="filterFaixaEtaria">📊 Faixa Etária</label>
-                <select id="filterFaixaEtaria" onchange="applyFilters()">
-                    <option value="">Todas</option>
-                    <option value="0-12">0-12 anos (Pediátrico)</option>
-                    <option value="13-17">13-17 anos (Adolescente)</option>
-                    <option value="18-59">18-59 anos (Adulto)</option>
-                    <option value="60+">60+ anos (Idoso)</option>
-                </select>
+    <div class="container">
+        <!-- FILTROS -->
+        <div class="filters">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>📅 Período</label>
+                    <select id="filterMes" onchange="applyFilters()">
+                        <option value="">Todos os períodos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>⚠️ Classificação de Risco</label>
+                    <select id="filterRisco" onchange="applyFilters()">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>👤 Sexo</label>
+                    <select id="filterSexo" onchange="applyFilters()">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>🏘️ Município</label>
+                    <select id="filterMunicipio" onchange="applyFilters()">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="tabs">
-        <button class="tab-button active" onclick="showTab('executivo')">🏥 Painel Executivo</button>
-        <button class="tab-button" onclick="showTab('atendimento')">📊 Atendimento</button>
-        <button class="tab-button" onclick="showTab('assistencial')">🩺 Assistencial</button>
-        <button class="tab-button" onclick="showTab('operacional')">🚑 Operacional</button>
-        <button class="tab-button" onclick="showTab('rh')">👥 Recursos Humanos</button>
-        <button class="tab-button" onclick="showTab('insights')">🔍 Insights</button>
-    </div>
+        <!-- ABAS -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('executivo', this)">🏥 Executivo</button>
+            <button class="tab-button" onclick="switchTab('atendimento', this)">📊 Atendimento</button>
+            <button class="tab-button" onclick="switchTab('rh', this)">👥 Recursos Humanos</button>
+            <button class="tab-button" onclick="switchTab('insights', this)">🔍 Insights</button>
+        </div>
 
-    <div id="executivo" class="tab-content active">
-        <div id="kpiExecutivo"></div>
-        <div class="charts-grid">
-            <div class="chart-container">
-                <h3>📈 Evolução de Atendimentos</h3>
-                <div class="chart-wrapper"><canvas id="chartEvolucao"></canvas></div>
-            </div>
-            <div class="chart-container">
-                <h3>⚠️ Distribuição por Risco</h3>
-                <div class="chart-wrapper"><canvas id="chartRisco"></canvas></div>
-            </div>
+        <!-- ABA EXECUTIVO -->
+        <div id="executivo" class="tab-content active">
+            <div class="kpi-grid" id="kpiExecutivo"></div>
         </div>
-    </div>
 
-    <div id="atendimento" class="tab-content">
-        <div id="kpiAtendimento"></div>
-        <div class="charts-grid">
-            <div class="chart-container">
-                <h3>⏱️ Atendimentos Dentro/Fora do Prazo</h3>
-                <div class="chart-wrapper"><canvas id="chartTempo"></canvas></div>
-            </div>
-            <div class="chart-container">
-                <h3>👥 Distribuição por Sexo</h3>
-                <div class="chart-wrapper"><canvas id="chartSexo"></canvas></div>
-            </div>
-            <div class="chart-container">
-                <h3>📊 Distribuição por Faixa Etária</h3>
-                <div class="chart-wrapper"><canvas id="chartFaixaEtaria"></canvas></div>
-            </div>
-            <div class="chart-container">
-                <h3>🏘️ Top 5 Municípios</h3>
-                <div class="chart-wrapper"><canvas id="chartMunicipio"></canvas></div>
+        <!-- ABA ATENDIMENTO -->
+        <div id="atendimento" class="tab-content">
+            <div class="kpi-grid" id="kpiAtendimento"></div>
+            <div class="charts-grid" id="chartsAtendimento"></div>
+            <div class="table-container">
+                <h3>📋 Top 50 CID</h3>
+                <div id="tableCID"></div>
             </div>
         </div>
-        <div class="table-container">
-            <h3>🏥 Top 50 CID</h3>
-            <div id="tableCIDContainer"></div>
-        </div>
-    </div>
 
-    <div id="assistencial" class="tab-content">
-        <div class="charts-grid">
-            <div class="chart-container full-width">
-                <h3>🧪 Top 15 Exames Laboratoriais</h3>
-                <div id="tableExamesContainer"></div>
-            </div>
-            <div class="chart-container full-width">
-                <h3>🖼️ Top 15 Radiografias</h3>
-                <div id="tableRadiografiasContainer"></div>
-            </div>
-            <div class="chart-container full-width">
-                <h3>⚕️ Top 15 Procedimentos</h3>
-                <div id="tableProcedimentosContainer"></div>
+        <!-- ABA RH -->
+        <div id="rh" class="tab-content">
+            <div class="kpi-grid" id="kpiRH"></div>
+            <div class="charts-grid" id="chartsRH"></div>
+            <div class="table-container">
+                <h3>📋 Resumo Mensal de RH</h3>
+                <div id="tableRH"></div>
             </div>
         </div>
-    </div>
 
-    <div id="operacional" class="tab-content">
-        <div id="kpiOperacional"></div>
-        <div class="charts-grid">
-            <div class="chart-container">
-                <h3>🚐 Remoções por Destino</h3>
-                <div class="chart-wrapper"><canvas id="chartRemocoesDestino"></canvas></div>
-            </div>
-            <div class="chart-container">
-                <h3>🧺 Operações Lavanderia</h3>
-                <div class="chart-wrapper"><canvas id="chartLavanderia"></canvas></div>
-            </div>
+        <!-- ABA INSIGHTS -->
+        <div id="insights" class="tab-content">
+            <div id="insightsContent"></div>
         </div>
-    </div>
-
-    <div id="rh" class="tab-content">
-        <div id="kpiRH"></div>
-        <div class="chart-container full-width">
-            <h3>📈 Evolução de Indicadores de RH</h3>
-            <div class="chart-wrapper"><canvas id="chartRHEvolucao"></canvas></div>
-        </div>
-        <div class="table-container">
-            <div id="tableRHContainer"></div>
-        </div>
-    </div>
-
-    <div id="insights" class="tab-content">
-        <div id="insightsContent"></div>
     </div>
 
     <div class="footer">
-        <p>Dashboard Hospitalar © 2025 | Hospital e Maternidade Miquelina Franco e Elisa Padilha</p>
-        <p>Dados atualizados até: <span id="dataAtualizacao">-</span></p>
-        <div class="footer-credit">Desenvolvido por Ygor Limeira Bortotti - Gerente Administrativo Hospital Municipal de Contenda</div>
+        <p>Desenvolvido por Ygor Limeira Bortotti - Gerente Administrativo Hospital Municipal de Contenda</p>
     </div>
 
     <script>
         let allData = {};
         let charts = {};
-        const VERSION = Date.now();
 
+        // CARREGAR DADOS
         async function loadData() {
             try {
-                const response = await fetch('./dashboard_data.json?v=' + VERSION);
-                const data = await response.json();
-                allData = data;
-                console.log('✓ Dados carregados');
+                const response = await fetch('./dashboard_data.json?t=' + Date.now());
+                allData = await response.json();
                 initializeFilters();
                 renderExecutivo();
-            } catch (error) {
-                console.error('✗ Erro:', error);
-                alert('Erro ao carregar dados: ' + error.message);
+            } catch (e) {
+                console.error('Erro ao carregar dados:', e);
             }
         }
 
-        function formatMesAno(m) {
-            if (!m) return '-';
-            if (m.includes('/')) return m;
-            const [y, mo] = m.split('-');
+        // FORMATAR MÊS
+        function formatMes(mes) {
+            if (!mes) return '-';
             const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-            return `${months[parseInt(mo) - 1]}/${y.slice(-2)}`;
+            if (mes.includes('-')) {
+                const [y, m] = mes.split('-');
+                return `${months[parseInt(m) - 1]}/${y.slice(-2)}`;
+            }
+            return mes;
         }
 
-        function getFaixaEtaria(idade) {
-            if (!idade || isNaN(idade)) return null;
-            const id = parseInt(idade);
-            if (id >= 0 && id <= 12) return '0-12';
-            if (id >= 13 && id <= 17) return '13-17';
-            if (id >= 18 && id <= 59) return '18-59';
-            if (id >= 60) return '60+';
-            return null;
-        }
-
+        // INICIALIZAR FILTROS
         function initializeFilters() {
             const meses = new Set();
             const riscos = new Set();
             const sexos = new Set();
             const municipios = new Set();
 
-            (allData.atendimento_geral_mensal || []).forEach(r => meses.add(formatMesAno(r.Mes)));
-            (allData.atendimento_risco || []).forEach(r => riscos.add(r.Classificacao?.trim()));
-            (allData.atendimento_sexo || []).forEach(r => sexos.add(r.Sexo?.trim()));
-            (allData.atendimento_municipio || []).forEach(r => municipios.add(r.Municipio?.trim()));
+            (allData.atendimento_cid || []).forEach(r => {
+                if (r.Mes) meses.add(formatMes(r.Mes));
+                if (r.Classificacao) riscos.add(r.Classificacao.trim());
+                if (r.Sexo) sexos.add(r.Sexo.trim());
+                if (r.Municipio) municipios.add(r.Municipio.trim());
+            });
 
             populateSelect('filterMes', Array.from(meses).sort());
             populateSelect('filterRisco', Array.from(riscos).filter(r => r).sort());
@@ -292,532 +187,266 @@
             });
         }
 
+        // OBTER DADOS FILTRADOS
         function getFiltered() {
             const mes = document.getElementById('filterMes').value;
             const risco = document.getElementById('filterRisco').value;
             const sexo = document.getElementById('filterSexo').value;
             const municipio = document.getElementById('filterMunicipio').value;
-            const faixaEtaria = document.getElementById('filterFaixaEtaria').value;
 
-            const filtered = {};
-            for (const key in allData) {
-                filtered[key] = allData[key].filter(row => {
-                    if (mes && row.Mes) {
-                        const rowMes = formatMesAno(row.Mes);
-                        if (rowMes !== mes) return false;
-                    }
-                    if (risco && row.Classificacao && row.Classificacao.trim() !== risco) return false;
-                    if (sexo && row.Sexo && row.Sexo.trim() !== sexo) return false;
-                    if (municipio && row.Municipio && row.Municipio.trim() !== municipio) return false;
-                    if (faixaEtaria && row.Idade) {
-                        const rowFaixa = getFaixaEtaria(row.Idade);
-                        if (rowFaixa !== faixaEtaria) return false;
-                    }
-                    return true;
-                });
-            }
-            return filtered;
+            return (allData.atendimento_cid || []).filter(row => {
+                if (mes && row.Mes && formatMes(row.Mes) !== mes) return false;
+                if (risco && row.Classificacao && row.Classificacao.trim() !== risco) return false;
+                if (sexo && row.Sexo && row.Sexo.trim() !== sexo) return false;
+                if (municipio && row.Municipio && row.Municipio.trim() !== municipio) return false;
+                return true;
+            });
         }
 
-        function applyFilters() {
-            const tab = document.querySelector('.tab-content.active').id;
-            if (tab === 'executivo') renderExecutivo();
-            else if (tab === 'atendimento') renderAtendimento();
-            else if (tab === 'assistencial') renderAssistencial();
-            else if (tab === 'operacional') renderOperacional();
-            else if (tab === 'rh') renderRH();
-            else if (tab === 'insights') renderInsights();
-            // Força atualização imediata ao mudar filtro
-            setTimeout(() => {
-                if (tab === 'rh') renderRH();
-            }, 50);
-        }
-
+        // RENDERIZAR EXECUTIVO
         function renderExecutivo() {
-            const d = getFiltered();
+            const data = getFiltered();
             const container = document.getElementById('kpiExecutivo');
             container.innerHTML = '';
 
-            const total = (d.atendimento_geral_mensal || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const intern = (d.internacoes_tipo || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const taxa = total > 0 ? ((intern / total) * 100).toFixed(2) : 0;
-            const trans = (d.logistica_transporte || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+            const total = data.length;
+            const risco = {};
+            data.forEach(r => {
+                const key = r.Classificacao?.trim() || 'Desconhecido';
+                risco[key] = (risco[key] || 0) + 1;
+            });
 
-            [
-                { t: 'Total de Atendimentos', v: total.toLocaleString('pt-BR'), c: 'primary' },
-                { t: 'Internações', v: intern.toLocaleString('pt-BR'), c: 'secondary' },
-                { t: 'Taxa de Ocupação', v: taxa + '%', c: 'warning' },
-                { t: 'Remoções', v: trans.toLocaleString('pt-BR'), c: 'primary' }
-            ].forEach(kpi => {
+            const kpis = [
+                { title: 'Total de Atendimentos', value: total.toLocaleString('pt-BR') },
+                { title: 'Atendimento Imediato', value: (risco['Atendimento Imediato'] || 0).toLocaleString('pt-BR') },
+                { title: '10 Minutos', value: (risco['10 min'] || 0).toLocaleString('pt-BR') },
+                { title: '60 Minutos', value: (risco['60 min'] || 0).toLocaleString('pt-BR') }
+            ];
+
+            kpis.forEach(kpi => {
                 const card = document.createElement('div');
-                card.className = `kpi-card ${kpi.c}`;
-                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v}</div>`;
+                card.className = 'kpi-card';
+                card.innerHTML = `<h3>${kpi.title}</h3><div class="value">${kpi.value}</div>`;
+                container.appendChild(card);
+            });
+        }
+
+        // RENDERIZAR ATENDIMENTO
+        function renderAtendimento() {
+            const data = getFiltered();
+            const container = document.getElementById('kpiAtendimento');
+            container.innerHTML = '';
+
+            const sexo = {};
+            data.forEach(r => {
+                const key = r.Sexo?.trim() || 'Desconhecido';
+                sexo[key] = (sexo[key] || 0) + 1;
+            });
+
+            const kpis = [
+                { title: 'Masculino', value: (sexo['Masculino'] || 0).toLocaleString('pt-BR') },
+                { title: 'Feminino', value: (sexo['Feminino'] || 0).toLocaleString('pt-BR') }
+            ];
+
+            kpis.forEach(kpi => {
+                const card = document.createElement('div');
+                card.className = 'kpi-card';
+                card.innerHTML = `<h3>${kpi.title}</h3><div class="value">${kpi.value}</div>`;
                 container.appendChild(card);
             });
 
-            // Gráfico de Evolução
-            const evolData = (d.atendimento_geral_mensal || []).sort((a, b) => a.Mes.localeCompare(b.Mes));
-            const ctx1 = document.getElementById('chartEvolucao').getContext('2d');
-            if (charts.evolucao) charts.evolucao.destroy();
-            
-            const isSingleMonth = evolData.length === 1;
-            charts.evolucao = new Chart(ctx1, {
-                type: isSingleMonth ? 'bar' : 'line',
+            // GRÁFICO DE RISCO
+            const risco = {};
+            data.forEach(r => {
+                const key = r.Classificacao?.trim() || 'Desconhecido';
+                risco[key] = (risco[key] || 0) + 1;
+            });
+
+            const chartsContainer = document.getElementById('chartsAtendimento');
+            chartsContainer.innerHTML = `
+                <div class="chart-container">
+                    <h3>⚠️ Distribuição por Classificação de Risco</h3>
+                    <div class="chart-wrapper"><canvas id="chartRisco"></canvas></div>
+                </div>
+            `;
+
+            const ctx = document.getElementById('chartRisco').getContext('2d');
+            if (charts.risco) charts.risco.destroy();
+            charts.risco = new Chart(ctx, {
+                type: 'bar',
                 data: {
-                    labels: evolData.map(r => formatMesAno(r.Mes)),
-                    datasets: [{
-                        label: 'Atendimentos',
-                        data: evolData.map(r => parseInt(r.Quantidade || 0)),
-                        borderColor: '#0066cc',
-                        backgroundColor: isSingleMonth ? '#0066cc' : 'rgba(0, 102, 204, 0.1)',
-                        tension: 0.4,
-                        fill: !isSingleMonth,
-                        borderWidth: 2,
-                        pointRadius: isSingleMonth ? 0 : 5,
-                        pointBackgroundColor: '#0066cc'
-                    }]
+                    labels: Object.keys(risco),
+                    datasets: [{ label: 'Atendimentos', data: Object.values(risco), backgroundColor: '#0066cc' }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            // Gráfico de Risco
-            const riscoData = {};
-            (d.atendimento_risco || []).forEach(r => {
-                const key = r.Classificacao?.trim() || 'Desconhecido';
-                riscoData[key] = (riscoData[key] || 0) + parseInt(r.Quantidade || 0);
+            // TABELA CID
+            const cidData = data.sort((a, b) => (b.Quantidade || 0) - (a.Quantidade || 0)).slice(0, 50);
+            let html = '<table><thead><tr><th>Rank</th><th>CID</th><th>Descrição</th><th>Classificação</th><th>Quantidade</th></tr></thead><tbody>';
+            cidData.forEach((r, i) => {
+                html += `<tr><td class="text-center">${i + 1}</td><td>${r.CID || '-'}</td><td>${r.CID_Full || '-'}</td><td>${r.Classificacao?.trim() || '-'}</td><td class="text-right">${r.Quantidade || 0}</td></tr>`;
             });
-            const ctx2 = document.getElementById('chartRisco').getContext('2d');
-            if (charts.risco) charts.risco.destroy();
-            charts.risco = new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(riscoData),
-                    datasets: [{ data: Object.values(riscoData), backgroundColor: ['#ff6b6b', '#ffa500', '#ffff00', '#00aa66'], borderColor: '#fff', borderWidth: 2 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-                plugins: [ChartDataLabels]
-            });
+            html += '</tbody></table>';
+            document.getElementById('tableCID').innerHTML = html;
         }
 
-        function renderAtendimento() {
-            const d = getFiltered();
-            const container = document.getElementById('kpiAtendimento');
-            container.innerHTML = '';
-
-            const total = (d.atendimento_geral_mensal || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const riscoData = {};
-            (d.atendimento_risco || []).forEach(r => {
-                const key = r.Classificacao?.trim() || 'Desconhecido';
-                riscoData[key] = (riscoData[key] || 0) + parseInt(r.Quantidade || 0);
-            });
-
-            [
-                { t: 'Total', v: total.toLocaleString('pt-BR'), c: 'primary' },
-                { t: 'Imediato', v: (riscoData['Atendimento Imediato'] || 0).toLocaleString('pt-BR'), c: 'warning' },
-                { t: '10 Min', v: (riscoData['10 min'] || 0).toLocaleString('pt-BR'), c: 'secondary' },
-                { t: '60 Min', v: (riscoData['60 min'] || 0).toLocaleString('pt-BR'), c: 'primary' }
-            ].forEach(kpi => {
-                const card = document.createElement('div');
-                card.className = `kpi-card ${kpi.c}`;
-                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v}</div>`;
-                container.appendChild(card);
-            });
-
-            // Gráfico de Tempo - Filtra por período selecionado
-            const tempoData = {};
-            const mesAtual = document.getElementById('filterMes').value;
-            (d.atendimento_limite_tempo || []).forEach(r => {
-                // Filtra pelo mês se um mês específico foi selecionado
-                if (mesAtual && r.Mes) {
-                    const rowMes = formatMesAno(r.Mes);
-                    if (rowMes !== mesAtual) return;
-                }
-                const key = r.Classificacao?.trim() || 'Desconhecido';
-                if (!tempoData[key]) tempoData[key] = { dentro: 0, acima: 0 };
-                tempoData[key].dentro += r.Dentro_Limite || 0;
-                tempoData[key].acima += r.Acima_Limite || 0;
-            });
-            const ctx1 = document.getElementById('chartTempo').getContext('2d');
-            if (charts.tempo) charts.tempo.destroy();
-            charts.tempo = new Chart(ctx1, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(tempoData),
-                    datasets: [
-                        { label: 'Dentro do Limite', data: Object.values(tempoData).map(v => v.dentro), backgroundColor: '#00aa66' },
-                        { label: 'Acima do Limite', data: Object.values(tempoData).map(v => v.acima), backgroundColor: '#ff6b6b' }
-                    ]
-                },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } } }
-            });
-
-            // Gráfico de Sexo
-            const sexoData = {};
-            (d.atendimento_sexo || []).forEach(r => {
-                sexoData[r.Sexo?.trim() || 'Desconhecido'] = (sexoData[r.Sexo?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
-            });
-            const ctx2 = document.getElementById('chartSexo').getContext('2d');
-            if (charts.sexo) charts.sexo.destroy();
-            charts.sexo = new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(sexoData),
-                    datasets: [{ data: Object.values(sexoData), backgroundColor: ['#ff69b4', '#4169e1'], borderColor: '#fff', borderWidth: 2 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-                plugins: [ChartDataLabels]
-            });
-
-            // Gráfico de Faixa Etária
-            const faixaData = { '0-12': 0, '13-17': 0, '18-59': 0, '60+': 0 };
-            (d.atendimento_cid || []).forEach(r => {
-                const faixa = getFaixaEtaria(r.Idade);
-                if (faixa) faixaData[faixa]++;
-            });
-            const ctx3 = document.getElementById('chartFaixaEtaria').getContext('2d');
-            if (charts.faixaEtaria) charts.faixaEtaria.destroy();
-            charts.faixaEtaria = new Chart(ctx3, {
-                type: 'bar',
-                data: {
-                    labels: ['0-12 (Pediátrico)', '13-17 (Adolescente)', '18-59 (Adulto)', '60+ (Idoso)'],
-                    datasets: [{ label: 'Atendimentos', data: Object.values(faixaData), backgroundColor: '#0066cc' }]
-                },
-                options: { indexAxis: 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            // Gráfico de Município
-            const munData = {};
-            (d.atendimento_municipio || []).forEach(r => {
-                munData[r.Municipio?.trim() || 'Desconhecido'] = (munData[r.Municipio?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
-            });
-            const topMun = Object.entries(munData).sort((a, b) => b[1] - a[1]).slice(0, 5);
-            const ctx4 = document.getElementById('chartMunicipio').getContext('2d');
-            if (charts.municipio) charts.municipio.destroy();
-            charts.municipio = new Chart(ctx4, {
-                type: 'bar',
-                data: {
-                    labels: topMun.map(([k]) => k),
-                    datasets: [{ label: 'Atendimentos', data: topMun.map(([, v]) => v), backgroundColor: '#0066cc' }]
-                },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            // Tabela CID - Filtra por período selecionado
-            const mesAtualCID = document.getElementById('filterMes').value;
-            let cidDataFiltered = (d.atendimento_cid || []);
-            if (mesAtualCID) {
-                cidDataFiltered = cidDataFiltered.filter(r => {
-                    if (r.Mes) {
-                        const rowMes = formatMesAno(r.Mes);
-                        return rowMes === mesAtualCID;
-                    }
-                    return true;
+        // RENDERIZAR RH
+        function renderRH() {
+            const mes = document.getElementById('filterMes').value;
+            const rhData = (allData.rh_movimentacao || []);
+            
+            let filtered = rhData;
+            if (mes) {
+                filtered = rhData.filter(r => {
+                    const rowMes = formatMes(r.Mes + '-01');
+                    return rowMes === mes;
                 });
             }
-            const cidData = cidDataFiltered.sort((a, b) => (b.Quantidade || 0) - (a.Quantidade || 0)).slice(0, 50);
-            let tableHtml = '<table><thead><tr><th>Rank</th><th>CID</th><th>Classificação</th><th>Quantidade</th></tr></thead><tbody>';
-            cidData.forEach((r, i) => {
-                tableHtml += `<tr><td>${i + 1}</td><td class="text-left">${r.CID_Full || r.CID || '-'}</td><td>${r.Classificacao?.trim() || '-'}</td><td class="text-right">${r.Quantidade || 0}</td></tr>`;
-            });
-            tableHtml += '</tbody></table>';
-            document.getElementById('tableCIDContainer').innerHTML = tableHtml;
-        }
 
-        function renderAssistencial() {
-            const d = getFiltered();
-
-            // Exames
-            const examesData = {};
-            (d.exames_laboratoriais || []).forEach(r => {
-                examesData[r.Exame?.trim() || 'Desconhecido'] = (examesData[r.Exame?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
-            });
-            const topExames = Object.entries(examesData).sort((a, b) => b[1] - a[1]).slice(0, 15);
-            let tableHtml = '<table><thead><tr><th>Rank</th><th>Exame</th><th>Quantidade</th></tr></thead><tbody>';
-            topExames.forEach((r, i) => {
-                tableHtml += `<tr><td>${i + 1}</td><td class="text-left">${r[0]}</td><td class="text-right">${r[1]}</td></tr>`;
-            });
-            tableHtml += '</tbody></table>';
-            document.getElementById('tableExamesContainer').innerHTML = tableHtml;
-
-            // Radiografias
-            const radioData = {};
-            (d.radiografias || []).forEach(r => {
-                radioData[r.Tipo?.trim() || 'Desconhecido'] = (radioData[r.Tipo?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
-            });
-            const topRadio = Object.entries(radioData).sort((a, b) => b[1] - a[1]).slice(0, 15);
-            tableHtml = '<table><thead><tr><th>Rank</th><th>Radiografia</th><th>Quantidade</th></tr></thead><tbody>';
-            topRadio.forEach((r, i) => {
-                tableHtml += `<tr><td>${i + 1}</td><td class="text-left">${r[0]}</td><td class="text-right">${r[1]}</td></tr>`;
-            });
-            tableHtml += '</tbody></table>';
-            document.getElementById('tableRadiografiasContainer').innerHTML = tableHtml;
-
-            // Procedimentos
-            const procData = {};
-            (d.procedimentos || []).forEach(r => {
-                procData[r.Procedimento?.trim() || 'Desconhecido'] = (procData[r.Procedimento?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
-            });
-            const topProc = Object.entries(procData).sort((a, b) => b[1] - a[1]).slice(0, 15);
-            tableHtml = '<table><thead><tr><th>Rank</th><th>Procedimento</th><th>Quantidade</th></tr></thead><tbody>';
-            topProc.forEach((r, i) => {
-                tableHtml += `<tr><td>${i + 1}</td><td class="text-left">${r[0]}</td><td class="text-right">${r[1]}</td></tr>`;
-            });
-            tableHtml += '</tbody></table>';
-            document.getElementById('tableProcedimentosContainer').innerHTML = tableHtml;
-        }
-
-        function renderOperacional() {
-            const d = getFiltered();
-            const container = document.getElementById('kpiOperacional');
-            container.innerHTML = '';
-
-            const trans = (d.logistica_transporte || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const lav = (d.logistica_lavanderia || []).reduce((s, r) => s + parseFloat(r.Peso || 0), 0);
-            const oxy = (d.logistica_oxigenio || []).reduce((s, r) => s + parseFloat(r.M3 || 0), 0);
-            const res = (d.logistica_residuos || []).reduce((s, r) => s + parseFloat(r.KG || 0), 0);
-
-            [
-                { t: 'Remoções', v: trans.toLocaleString('pt-BR'), c: 'primary' },
-                { t: 'Lavanderia (KG)', v: lav.toLocaleString('pt-BR', { maximumFractionDigits: 0 }), c: 'secondary' },
-                { t: 'Oxigênio (M³)', v: oxy.toLocaleString('pt-BR', { maximumFractionDigits: 0 }), c: 'warning' },
-                { t: 'Resíduos (KG)', v: res.toLocaleString('pt-BR', { maximumFractionDigits: 0 }), c: 'primary' }
-            ].forEach(kpi => {
-                const card = document.createElement('div');
-                card.className = `kpi-card ${kpi.c}`;
-                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v}</div>`;
-                container.appendChild(card);
-            });
-
-            // Gráfico Remoções - Filtra por período selecionado
-            const transData = {};
-            const mesRemocoesAtual = document.getElementById('filterMes').value;
-            (d.logistica_transporte || []).forEach(r => {
-                // Filtra pelo mês se um mês específico foi selecionado
-                if (mesRemocoesAtual && r.Mes) {
-                    const rowMes = formatMesAno(r.Mes);
-                    if (rowMes !== mesRemocoesAtual) return;
-                }
-                transData[r.Destino?.trim() || 'Desconhecido'] = (transData[r.Destino?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
-            });
-            const transSorted = Object.entries(transData).sort((a, b) => b[1] - a[1]);
-            const ctx1 = document.getElementById('chartRemocoesDestino').getContext('2d');
-            if (charts.remocoesDestino) charts.remocoesDestino.destroy();
-            charts.remocoesDestino = new Chart(ctx1, {
-                type: 'bar',
-                data: {
-                    labels: transSorted.map(([k]) => k),
-                    datasets: [{ label: 'Remoções', data: transSorted.map(([, v]) => v), backgroundColor: '#0066cc' }]
-                },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            // Gráfico Lavanderia - Filtra por período selecionado
-            const mesLavAtual = document.getElementById('filterMes').value;
-            let lavDataFiltered = (d.logistica_lavanderia || []);
-            if (mesLavAtual) {
-                lavDataFiltered = lavDataFiltered.filter(r => formatMesAno(r.Mes) === mesLavAtual);
-            }
-            const lavData = lavDataFiltered.sort((a, b) => a.Mes.localeCompare(b.Mes));
-            const ctx2 = document.getElementById('chartLavanderia').getContext('2d');
-            if (charts.lavanderia) charts.lavanderia.destroy();
-            
-            const isSingleMonth = lavData.length === 1;
-            charts.lavanderia = new Chart(ctx2, {
-                type: isSingleMonth ? 'bar' : 'line',
-                data: {
-                    labels: lavData.map(r => formatMesAno(r.Mes)),
-                    datasets: [{
-                        label: 'Peso (KG)',
-                        data: lavData.map(r => parseFloat(r.Peso || 0)),
-                        borderColor: '#0066cc',
-                        backgroundColor: isSingleMonth ? '#0066cc' : 'rgba(0, 102, 204, 0.1)',
-                        tension: 0.4,
-                        fill: !isSingleMonth,
-                        borderWidth: 2,
-                        pointRadius: isSingleMonth ? 0 : 5,
-                        pointBackgroundColor: '#0066cc'
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } } }
-            });
-        }
-
-        function renderRH() {
-            const d = getFiltered();
             const container = document.getElementById('kpiRH');
             container.innerHTML = '';
 
-            const mes_filtro_rh = document.getElementById('filterMes').value;
-            let rh_filtrado = (d.rh_movimentacao || []);
-            if (mes_filtro_rh) {
-                rh_filtrado = rh_filtrado.filter(r => formatMesAno(r.Mes + '-01') === mes_filtro_rh);
-            }
+            const atestados = filtered.reduce((s, r) => s + (r.Atestados || 0), 0);
+            const faltas = filtered.reduce((s, r) => s + (r.Faltas || 0), 0);
+            const advertencias = filtered.reduce((s, r) => s + (r.Advertencias || 0), 0);
+            const suspensao = filtered.reduce((s, r) => s + (r.Suspensao || 0), 0);
+            const rescisao = filtered.reduce((s, r) => s + (r.Rescisao || 0), 0);
 
-            const atestados = rh_filtrado.reduce((s, r) => s + (r.Atestados || 0), 0);
-            const faltas = rh_filtrado.reduce((s, r) => s + (r.Faltas || 0), 0);
-            const advertencias = rh_filtrado.reduce((s, r) => s + (r.Advertencias || 0), 0);
-            const suspensao = rh_filtrado.reduce((s, r) => s + (r.Suspensao || 0), 0);
-            const rescisao = rh_filtrado.reduce((s, r) => s + (r.Rescisao || 0), 0);
+            const kpis = [
+                { title: 'Atestados', value: atestados },
+                { title: 'Faltas', value: faltas },
+                { title: 'Advertências', value: advertencias },
+                { title: 'Suspensão', value: suspensao },
+                { title: 'Rescisões', value: rescisao }
+            ];
 
-            [
-                { t: 'Atestados', v: atestados, c: 'warning' },
-                { t: 'Faltas', v: faltas, c: 'primary' },
-                { t: 'Advertências', v: advertencias, c: 'secondary' },
-                { t: 'Suspensão', v: suspensao, c: 'warning' },
-                { t: 'Rescisões', v: rescisao, c: 'primary' }
-            ].forEach(kpi => {
+            kpis.forEach(kpi => {
                 const card = document.createElement('div');
-                card.className = `kpi-card ${kpi.c}`;
-                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v.toLocaleString('pt-BR')}</div>`;
+                card.className = 'kpi-card';
+                card.innerHTML = `<h3>${kpi.title}</h3><div class="value">${kpi.value.toLocaleString('pt-BR')}</div>`;
                 container.appendChild(card);
             });
 
-            const rhData = (d.rh_movimentacao || []).sort((a, b) => a.Mes.localeCompare(b.Mes));
-            const rhDataFiltrado = mes_filtro_rh ? rhData.filter(r => {
-                const rowMes = r.Mes ? (r.Mes.includes('-') ? formatMesAno(r.Mes) : formatMesAno(r.Mes + '-01')) : '';
-                return rowMes === mes_filtro_rh;
-            }) : rhData;
+            // GRÁFICO RH
+            const chartsContainer = document.getElementById('chartsRH');
+            chartsContainer.innerHTML = `
+                <div class="chart-container full-width">
+                    <h3>📈 Evolução de Indicadores de RH</h3>
+                    <div class="chart-wrapper"><canvas id="chartRHEvolucao"></canvas></div>
+                </div>
+            `;
+
+            const rhDataSorted = (allData.rh_movimentacao || []).sort((a, b) => a.Mes.localeCompare(b.Mes));
             const ctx = document.getElementById('chartRHEvolucao').getContext('2d');
             if (charts.rhEvolucao) charts.rhEvolucao.destroy();
             
-            const isSingleMonth = rhDataFiltrado.length === 1;
             charts.rhEvolucao = new Chart(ctx, {
-                type: isSingleMonth ? 'bar' : 'line',
+                type: 'line',
                 data: {
-                    labels: rhDataFiltrado.map(r => formatMesAno(r.Mes + '-01')),
+                    labels: rhDataSorted.map(r => formatMes(r.Mes + '-01')),
                     datasets: [
-                        { label: 'Atestados', data: rhDataFiltrado.map(r => r.Atestados || 0), borderColor: '#ff9900', backgroundColor: isSingleMonth ? '#ff9900' : 'rgba(255, 153, 0, 0.1)', tension: 0.4, fill: !isSingleMonth },
-                        { label: 'Faltas', data: rhDataFiltrado.map(r => r.Faltas || 0), borderColor: '#ff6b6b', backgroundColor: isSingleMonth ? '#ff6b6b' : 'rgba(255, 107, 107, 0.1)', tension: 0.4, fill: !isSingleMonth },
-                        { label: 'Advertências', data: rhDataFiltrado.map(r => r.Advertencias || 0), borderColor: '#0066cc', backgroundColor: isSingleMonth ? '#0066cc' : 'rgba(0, 102, 204, 0.1)', tension: 0.4, fill: !isSingleMonth },
-                        { label: 'Suspensão', data: rhDataFiltrado.map(r => r.Suspensao || 0), borderColor: '#00aa66', backgroundColor: isSingleMonth ? '#00aa66' : 'rgba(0, 170, 102, 0.1)', tension: 0.4, fill: !isSingleMonth },
-                        { label: 'Rescisões', data: rhDataFiltrado.map(r => r.Rescisao || 0), borderColor: '#9933cc', backgroundColor: isSingleMonth ? '#9933cc' : 'rgba(153, 51, 204, 0.1)', tension: 0.4, fill: !isSingleMonth }
+                        { label: 'Atestados', data: rhDataSorted.map(r => r.Atestados || 0), borderColor: '#ff9900', tension: 0.4 },
+                        { label: 'Faltas', data: rhDataSorted.map(r => r.Faltas || 0), borderColor: '#ff6b6b', tension: 0.4 },
+                        { label: 'Advertências', data: rhDataSorted.map(r => r.Advertencias || 0), borderColor: '#0066cc', tension: 0.4 }
                     ]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom' } } }
             });
 
-            let tableHtml = '<h3>📋 Resumo Mensal de Indicadores de RH</h3><table><thead><tr><th>Mês</th><th>Atestados</th><th>Faltas</th><th>Advertências</th><th>Suspensão</th><th>Rescisões</th></tr></thead><tbody>';
-            rhDataFiltrado.forEach(r => {
-                tableHtml += `<tr><td>${formatMesAno(r.Mes + '-01')}</td><td class="text-right">${r.Atestados || 0}</td><td class="text-right">${r.Faltas || 0}</td><td class="text-right">${r.Advertencias || 0}</td><td class="text-right">${r.Suspensao || 0}</td><td class="text-right">${r.Rescisao || 0}</td></tr>`;
+            // TABELA RH
+            let html = '<table><thead><tr><th>Mês</th><th>Atestados</th><th>Faltas</th><th>Advertências</th><th>Suspensão</th><th>Rescisões</th></tr></thead><tbody>';
+            rhDataSorted.forEach(r => {
+                html += `<tr><td>${formatMes(r.Mes + '-01')}</td><td class="text-right">${r.Atestados || 0}</td><td class="text-right">${r.Faltas || 0}</td><td class="text-right">${r.Advertencias || 0}</td><td class="text-right">${r.Suspensao || 0}</td><td class="text-right">${r.Rescisao || 0}</td></tr>`;
             });
-            tableHtml += '</tbody></table>';
-            document.getElementById('tableRHContainer').innerHTML = tableHtml;
+            html += '</tbody></table>';
+            document.getElementById('tableRH').innerHTML = html;
         }
 
+        // RENDERIZAR INSIGHTS
         function renderInsights() {
-            const d = getFiltered();
-            const container = document.getElementById('insightsContent');
-
-            const total = (d.atendimento_geral_mensal || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const intern = (d.internacoes_tipo || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const taxa = total > 0 ? ((intern / total) * 100).toFixed(2) : 0;
-
+            const data = getFiltered();
+            const total = data.length;
+            
             const risco = {};
-            (d.atendimento_risco || []).forEach(r => {
-                risco[r.Classificacao?.trim() || 'Desconhecido'] = (risco[r.Classificacao?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
+            data.forEach(r => {
+                const key = r.Classificacao?.trim() || 'Desconhecido';
+                risco[key] = (risco[key] || 0) + 1;
             });
 
             const sexo = {};
-            (d.atendimento_sexo || []).forEach(r => {
-                sexo[r.Sexo?.trim() || 'Desconhecido'] = (sexo[r.Sexo?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
+            data.forEach(r => {
+                const key = r.Sexo?.trim() || 'Desconhecido';
+                sexo[key] = (sexo[key] || 0) + 1;
             });
 
-            const mun = {};
-            (d.atendimento_municipio || []).forEach(r => {
-                mun[r.Municipio?.trim() || 'Desconhecido'] = (mun[r.Municipio?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
+            const municipio = {};
+            data.forEach(r => {
+                const key = r.Municipio?.trim() || 'Desconhecido';
+                municipio[key] = (municipio[key] || 0) + 1;
             });
-            const topMun = Object.entries(mun).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-            const oxy = (d.logistica_oxigenio || []).reduce((s, r) => s + parseFloat(r.M3 || 0), 0);
-            const res = (d.logistica_residuos || []).reduce((s, r) => s + parseFloat(r.KG || 0), 0);
-            const lav = (d.logistica_lavanderia || []).reduce((s, r) => s + parseFloat(r.Peso || 0), 0);
-            const trans = (d.logistica_transporte || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-
-            const tempoTotal = (d.atendimento_limite_tempo || []).reduce((s, r) => s + (r.Dentro_Limite || 0) + (r.Acima_Limite || 0), 0);
-            const tempoDentro = (d.atendimento_limite_tempo || []).reduce((s, r) => s + (r.Dentro_Limite || 0), 0);
-            const tempoAcima = tempoTotal - tempoDentro;
-            const tempoPercent = tempoTotal > 0 ? ((tempoDentro / tempoTotal) * 100).toFixed(2) : 0;
-
-            const rhData = (d.rh_movimentacao || []);
+            const rhData = (allData.rh_movimentacao || []);
             const atestados = rhData.reduce((s, r) => s + (r.Atestados || 0), 0);
             const faltas = rhData.reduce((s, r) => s + (r.Faltas || 0), 0);
-            const advertencias = rhData.reduce((s, r) => s + (r.Advertencias || 0), 0);
-            const rescisao = rhData.reduce((s, r) => s + (r.Rescisao || 0), 0);
-
-            const faixaData = { '0-12': 0, '13-17': 0, '18-59': 0, '60+': 0 };
-            (d.atendimento_cid || []).forEach(r => {
-                const faixa = getFaixaEtaria(r.Idade);
-                if (faixa) faixaData[faixa]++;
-            });
 
             let html = `
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <h4>📊 Indicadores Gerais</h4>
-                        <table class="metrics-table">
-                            <tr><td>Total de Atendimentos</td><td>${total.toLocaleString('pt-BR')}</td></tr>
-                            <tr><td>Internações</td><td>${intern.toLocaleString('pt-BR')}</td></tr>
-                            <tr><td>Taxa de Ocupação</td><td>${taxa}%</td></tr>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>📊 Resumo Geral</h3>
+                        <table style="width: 100%; font-size: 14px;">
+                            <tr><td>Total de Atendimentos</td><td style="text-align: right; font-weight: bold;">${total.toLocaleString('pt-BR')}</td></tr>
+                            <tr><td>Atestados (RH)</td><td style="text-align: right; font-weight: bold;">${atestados.toLocaleString('pt-BR')}</td></tr>
+                            <tr><td>Faltas (RH)</td><td style="text-align: right; font-weight: bold;">${faltas.toLocaleString('pt-BR')}</td></tr>
                         </table>
                     </div>
-                    <div class="metric-card">
-                        <h4>⏱️ Tempo de Atendimento</h4>
-                        <table class="metrics-table">
-                            <tr><td>Dentro do Prazo</td><td>${tempoDentro.toLocaleString('pt-BR')} (${tempoPercent}%)</td></tr>
-                            <tr><td>Acima do Prazo</td><td>${tempoAcima.toLocaleString('pt-BR')} (${(100 - tempoPercent).toFixed(2)}%)</td></tr>
+                    <div class="chart-container">
+                        <h3>⚠️ Classificação de Risco</h3>
+                        <table style="width: 100%; font-size: 14px;">
+                            ${Object.entries(risco).map(([k, v]) => `<tr><td>${k}</td><td style="text-align: right; font-weight: bold;">${v.toLocaleString('pt-BR')}</td></tr>`).join('')}
                         </table>
                     </div>
-                    <div class="metric-card">
-                        <h4>👥 Indicadores de RH</h4>
-                        <table class="metrics-table">
-                            <tr><td>Atestados</td><td>${atestados.toLocaleString('pt-BR')}</td></tr>
-                            <tr><td>Faltas</td><td>${faltas.toLocaleString('pt-BR')}</td></tr>
-                            <tr><td>Advertências</td><td>${advertencias.toLocaleString('pt-BR')}</td></tr>
-                            <tr><td>Rescisões</td><td>${rescisao.toLocaleString('pt-BR')}</td></tr>
+                    <div class="chart-container">
+                        <h3>👤 Distribuição por Sexo</h3>
+                        <table style="width: 100%; font-size: 14px;">
+                            ${Object.entries(sexo).map(([k, v]) => `<tr><td>${k}</td><td style="text-align: right; font-weight: bold;">${v.toLocaleString('pt-BR')}</td></tr>`).join('')}
                         </table>
                     </div>
-                    <div class="metric-card">
-                        <h4>🏘️ Top 5 Municípios</h4>
-                        <table class="metrics-table">
-                            ${topMun.map(([m, q]) => `<tr><td>${m}</td><td>${q.toLocaleString('pt-BR')}</td></tr>`).join('')}
-                        </table>
-                    </div>
-                    <div class="metric-card">
-                        <h4>📊 Distribuição por Faixa Etária</h4>
-                        <table class="metrics-table">
-                            <tr><td>0-12 (Pediátrico)</td><td>${faixaData['0-12'].toLocaleString('pt-BR')}</td></tr>
-                            <tr><td>13-17 (Adolescente)</td><td>${faixaData['13-17'].toLocaleString('pt-BR')}</td></tr>
-                            <tr><td>18-59 (Adulto)</td><td>${faixaData['18-59'].toLocaleString('pt-BR')}</td></tr>
-                            <tr><td>60+ (Idoso)</td><td>${faixaData['60+'].toLocaleString('pt-BR')}</td></tr>
-                        </table>
-                    </div>
-                    <div class="metric-card">
-                        <h4>🏥 Infraestrutura</h4>
-                        <table class="metrics-table">
-                            <tr><td>Oxigênio (M³)</td><td>${oxy.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</td></tr>
-                            <tr><td>Lavanderia (KG)</td><td>${lav.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</td></tr>
-                            <tr><td>Resíduos (KG)</td><td>${res.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</td></tr>
-                            <tr><td>Remoções</td><td>${trans.toLocaleString('pt-BR')}</td></tr>
+                    <div class="chart-container">
+                        <h3>🏘️ Top 5 Municípios</h3>
+                        <table style="width: 100%; font-size: 14px;">
+                            ${Object.entries(municipio).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `<tr><td>${k}</td><td style="text-align: right; font-weight: bold;">${v.toLocaleString('pt-BR')}</td></tr>`).join('')}
                         </table>
                     </div>
                 </div>
             `;
-            container.innerHTML = html;
+
+            document.getElementById('insightsContent').innerHTML = html;
         }
 
-        function showTab(name) {
+        // TROCAR ABA
+        function switchTab(tab, btn) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            document.getElementById(name).classList.add('active');
-            event.target.classList.add('active');
-            if (name === 'executivo') renderExecutivo();
-            else if (name === 'atendimento') renderAtendimento();
-            else if (name === 'assistencial') renderAssistencial();
-            else if (name === 'operacional') renderOperacional();
-            else if (name === 'rh') renderRH();
-            else if (name === 'insights') renderInsights();
+            document.getElementById(tab).classList.add('active');
+            btn.classList.add('active');
+
+            if (tab === 'executivo') renderExecutivo();
+            else if (tab === 'atendimento') renderAtendimento();
+            else if (tab === 'rh') renderRH();
+            else if (tab === 'insights') renderInsights();
         }
 
+        // APLICAR FILTROS
+        function applyFilters() {
+            const activeTab = document.querySelector('.tab-content.active').id;
+            if (activeTab === 'executivo') renderExecutivo();
+            else if (activeTab === 'atendimento') renderAtendimento();
+            else if (activeTab === 'rh') renderRH();
+            else if (activeTab === 'insights') renderInsights();
+        }
+
+        // CARREGAR DADOS AO INICIAR
         window.addEventListener('load', loadData);
     </script>
 </body>
