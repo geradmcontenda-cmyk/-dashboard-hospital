@@ -327,6 +327,10 @@
             else if (tab === 'operacional') renderOperacional();
             else if (tab === 'rh') renderRH();
             else if (tab === 'insights') renderInsights();
+            // Força atualização imediata ao mudar filtro
+            setTimeout(() => {
+                if (tab === 'rh') renderRH();
+            }, 50);
         }
 
         function renderExecutivo() {
@@ -419,9 +423,15 @@
                 container.appendChild(card);
             });
 
-            // Gráfico de Tempo
+            // Gráfico de Tempo - Filtra por período selecionado
             const tempoData = {};
+            const mesAtual = document.getElementById('filterMes').value;
             (d.atendimento_limite_tempo || []).forEach(r => {
+                // Filtra pelo mês se um mês específico foi selecionado
+                if (mesAtual && r.Mes) {
+                    const rowMes = formatMesAno(r.Mes);
+                    if (rowMes !== mesAtual) return;
+                }
                 const key = r.Classificacao?.trim() || 'Desconhecido';
                 if (!tempoData[key]) tempoData[key] = { dentro: 0, acima: 0 };
                 tempoData[key].dentro += r.Dentro_Limite || 0;
@@ -492,8 +502,19 @@
                 options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            // Tabela CID
-            const cidData = (d.atendimento_cid || []).sort((a, b) => (b.Quantidade || 0) - (a.Quantidade || 0)).slice(0, 50);
+            // Tabela CID - Filtra por período selecionado
+            const mesAtualCID = document.getElementById('filterMes').value;
+            let cidDataFiltered = (d.atendimento_cid || []);
+            if (mesAtualCID) {
+                cidDataFiltered = cidDataFiltered.filter(r => {
+                    if (r.Mes) {
+                        const rowMes = formatMesAno(r.Mes);
+                        return rowMes === mesAtualCID;
+                    }
+                    return true;
+                });
+            }
+            const cidData = cidDataFiltered.sort((a, b) => (b.Quantidade || 0) - (a.Quantidade || 0)).slice(0, 50);
             let tableHtml = '<table><thead><tr><th>Rank</th><th>CID</th><th>Classificação</th><th>Quantidade</th></tr></thead><tbody>';
             cidData.forEach((r, i) => {
                 tableHtml += `<tr><td>${i + 1}</td><td class="text-left">${r.CID_Full || r.CID || '-'}</td><td>${r.Classificacao?.trim() || '-'}</td><td class="text-right">${r.Quantidade || 0}</td></tr>`;
@@ -567,9 +588,15 @@
                 container.appendChild(card);
             });
 
-            // Gráfico Remoções
+            // Gráfico Remoções - Filtra por período selecionado
             const transData = {};
+            const mesRemocoesAtual = document.getElementById('filterMes').value;
             (d.logistica_transporte || []).forEach(r => {
+                // Filtra pelo mês se um mês específico foi selecionado
+                if (mesRemocoesAtual && r.Mes) {
+                    const rowMes = formatMesAno(r.Mes);
+                    if (rowMes !== mesRemocoesAtual) return;
+                }
                 transData[r.Destino?.trim() || 'Desconhecido'] = (transData[r.Destino?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
             });
             const transSorted = Object.entries(transData).sort((a, b) => b[1] - a[1]);
@@ -584,8 +611,13 @@
                 options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            // Gráfico Lavanderia
-            const lavData = (d.logistica_lavanderia || []).sort((a, b) => a.Mes.localeCompare(b.Mes));
+            // Gráfico Lavanderia - Filtra por período selecionado
+            const mesLavAtual = document.getElementById('filterMes').value;
+            let lavDataFiltered = (d.logistica_lavanderia || []);
+            if (mesLavAtual) {
+                lavDataFiltered = lavDataFiltered.filter(r => formatMesAno(r.Mes) === mesLavAtual);
+            }
+            const lavData = lavDataFiltered.sort((a, b) => a.Mes.localeCompare(b.Mes));
             const ctx2 = document.getElementById('chartLavanderia').getContext('2d');
             if (charts.lavanderia) charts.lavanderia.destroy();
             
@@ -641,7 +673,10 @@
             });
 
             const rhData = (d.rh_movimentacao || []).sort((a, b) => a.Mes.localeCompare(b.Mes));
-            const rhDataFiltrado = mes_filtro_rh ? rhData.filter(r => formatMesAno(r.Mes + '-01') === mes_filtro_rh) : rhData;
+            const rhDataFiltrado = mes_filtro_rh ? rhData.filter(r => {
+                const rowMes = r.Mes ? (r.Mes.includes('-') ? formatMesAno(r.Mes) : formatMesAno(r.Mes + '-01')) : '';
+                return rowMes === mes_filtro_rh;
+            }) : rhData;
             const ctx = document.getElementById('chartRHEvolucao').getContext('2d');
             if (charts.rhEvolucao) charts.rhEvolucao.destroy();
             
