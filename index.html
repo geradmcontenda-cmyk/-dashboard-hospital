@@ -38,6 +38,8 @@
         .kpi-card.secondary .value { color: #00aa66; }
         .kpi-card.warning { border-left-color: #ff9900; }
         .kpi-card.warning .value { color: #ff9900; }
+        .kpi-card.primary { border-left-color: #0066cc; }
+        .kpi-card.primary .value { color: #0066cc; }
         .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .chart-container h3 { margin-bottom: 15px; color: #333; font-size: 16px; font-weight: 600; }
@@ -46,20 +48,24 @@
         .table-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; overflow-x: auto; }
         .table-container h3 { margin-bottom: 15px; color: #333; font-size: 16px; font-weight: 600; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        table thead { background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); }
-        table th { padding: 12px; text-align: left; font-weight: 600; color: #0066cc; border-bottom: 2px solid #0066cc; white-space: nowrap; }
-        table td { padding: 10px 12px; border-bottom: 1px solid #eee; }
-        table tbody tr:hover { background: #f9f9f9; }
+        table thead { background: linear-gradient(135deg, #0066cc 0%, #004499 100%); }
+        table th { padding: 12px; text-align: center; font-weight: 600; color: white; border-bottom: 2px solid #0066cc; white-space: nowrap; }
+        table td { padding: 10px 12px; border-bottom: 1px solid #eee; text-align: center; }
+        table tbody tr:nth-child(even) { background: #f9f9f9; }
+        table tbody tr:hover { background: #f0f5ff; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
+        .text-left { text-align: left; }
         .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .metric-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-top: 3px solid #0066cc; }
         .metric-card h4 { color: #0066cc; margin-bottom: 15px; font-size: 14px; font-weight: 600; }
         .metrics-table { width: 100%; font-size: 13px; }
         .metrics-table tr { border-bottom: 1px solid #eee; }
+        .metrics-table tr:nth-child(even) { background: #f9f9f9; }
         .metrics-table td { padding: 8px 0; }
         .metrics-table td:first-child { color: #666; font-weight: 500; }
         .metrics-table td:last-child { text-align: right; font-weight: 600; color: #0066cc; }
+        .warning-message { background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 12px; border-radius: 5px; margin-bottom: 15px; }
         .footer { background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); padding: 20px; text-align: center; color: #666; font-size: 12px; margin-top: 40px; border-top: 1px solid #ddd; }
         .footer-credit { font-size: 11px; color: #999; margin-top: 10px; }
         @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } .header-content { flex-direction: column; text-align: center; } }
@@ -99,20 +105,30 @@
             <div class="filter-group">
                 <label for="filterSexo">👥 Sexo</label>
                 <select id="filterSexo" onchange="applyFilters()">
-                    <option value="">Todos</option>
+                    <option value="">Todos os Sexos</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="filterMunicipio">📍 Município</label>
+                <label for="filterMunicipio">🏘️ Município</label>
                 <select id="filterMunicipio" onchange="applyFilters()">
                     <option value="">Todos os Municípios</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterFaixaEtaria">📊 Faixa Etária</label>
+                <select id="filterFaixaEtaria" onchange="applyFilters()">
+                    <option value="">Todas</option>
+                    <option value="0-12">0-12 anos (Pediátrico)</option>
+                    <option value="13-17">13-17 anos (Adolescente)</option>
+                    <option value="18-59">18-59 anos (Adulto)</option>
+                    <option value="60+">60+ anos (Idoso)</option>
                 </select>
             </div>
         </div>
     </div>
 
     <div class="tabs">
-        <button class="tab-button active" onclick="showTab('executivo')">🏥 Executivo</button>
+        <button class="tab-button active" onclick="showTab('executivo')">🏥 Painel Executivo</button>
         <button class="tab-button" onclick="showTab('atendimento')">📊 Atendimento</button>
         <button class="tab-button" onclick="showTab('assistencial')">🩺 Assistencial</button>
         <button class="tab-button" onclick="showTab('operacional')">🚑 Operacional</button>
@@ -121,83 +137,85 @@
     </div>
 
     <div id="executivo" class="tab-content active">
-        <div class="kpi-cards" id="kpiExecutivo"></div>
+        <div id="kpiExecutivo"></div>
         <div class="charts-grid">
-            <div class="chart-container full-width">
-                <h3>📈 Evolução Mensal de Atendimentos</h3>
+            <div class="chart-container">
+                <h3>📈 Evolução de Atendimentos</h3>
                 <div class="chart-wrapper"><canvas id="chartEvolucao"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h3>⚠️ Distribuição por Risco</h3>
+                <div class="chart-wrapper"><canvas id="chartRisco"></canvas></div>
             </div>
         </div>
     </div>
 
     <div id="atendimento" class="tab-content">
-        <div class="kpi-cards" id="kpiAtendimento"></div>
+        <div id="kpiAtendimento"></div>
         <div class="charts-grid">
             <div class="chart-container">
-                <h3>⚠️ Classificação de Risco</h3>
-                <div class="chart-wrapper"><canvas id="chartRisco"></canvas></div>
+                <h3>⏱️ Atendimentos Dentro/Fora do Prazo</h3>
+                <div class="chart-wrapper"><canvas id="chartTempo"></canvas></div>
             </div>
             <div class="chart-container">
                 <h3>👥 Distribuição por Sexo</h3>
                 <div class="chart-wrapper"><canvas id="chartSexo"></canvas></div>
             </div>
             <div class="chart-container">
-                <h3>📍 Top 10 Municípios</h3>
-                <div class="chart-wrapper"><canvas id="chartMunicipio"></canvas></div>
-            </div>
-            <div class="chart-container">
-                <h3>👶 Distribuição por Faixa Etária</h3>
+                <h3>📊 Distribuição por Faixa Etária</h3>
                 <div class="chart-wrapper"><canvas id="chartFaixaEtaria"></canvas></div>
             </div>
+            <div class="chart-container">
+                <h3>🏘️ Top 5 Municípios</h3>
+                <div class="chart-wrapper"><canvas id="chartMunicipio"></canvas></div>
+            </div>
         </div>
-        <div class="table-container full-width" id="tableLimiteTempoContainer"></div>
-        <div class="table-container full-width" id="tableCIDContainer"></div>
+        <div class="table-container">
+            <h3>🏥 Top 50 CID</h3>
+            <div id="tableCIDContainer"></div>
+        </div>
     </div>
 
     <div id="assistencial" class="tab-content">
-        <div class="kpi-cards" id="kpiAssistencial"></div>
         <div class="charts-grid">
-            <div class="chart-container">
-                <h3>💨 Consumo de Oxigênio</h3>
-                <div class="chart-wrapper"><canvas id="chartOxigenio"></canvas></div>
+            <div class="chart-container full-width">
+                <h3>🧪 Top 15 Exames Laboratoriais</h3>
+                <div id="tableExamesContainer"></div>
+            </div>
+            <div class="chart-container full-width">
+                <h3>🖼️ Top 15 Radiografias</h3>
+                <div id="tableRadiografiasContainer"></div>
+            </div>
+            <div class="chart-container full-width">
+                <h3>⚕️ Top 15 Procedimentos</h3>
+                <div id="tableProcedimentosContainer"></div>
             </div>
         </div>
-        <div class="table-container full-width" id="tableLabContainer"></div>
-        <div class="table-container full-width" id="tableRadiografiaContainer"></div>
-        <div class="table-container full-width" id="tableProcedimentosContainer"></div>
     </div>
 
     <div id="operacional" class="tab-content">
-        <div class="kpi-cards" id="kpiOperacional"></div>
+        <div id="kpiOperacional"></div>
         <div class="charts-grid">
             <div class="chart-container">
-                <h3>🏥 Internações por Tipo</h3>
-                <div class="chart-wrapper"><canvas id="chartInternacaoTipo"></canvas></div>
-            </div>
-            <div class="chart-container">
                 <h3>🚐 Remoções por Destino</h3>
-                <div class="chart-wrapper"><canvas id="chartTransporte"></canvas></div>
+                <div class="chart-wrapper"><canvas id="chartRemocoesDestino"></canvas></div>
             </div>
             <div class="chart-container">
-                <h3>♻️ Resíduos por Grupo</h3>
-                <div class="chart-wrapper"><canvas id="chartResiduos"></canvas></div>
-            </div>
-            <div class="chart-container">
-                <h3>🧺 Lavanderia (KG)</h3>
+                <h3>🧺 Operações Lavanderia</h3>
                 <div class="chart-wrapper"><canvas id="chartLavanderia"></canvas></div>
             </div>
         </div>
     </div>
 
     <div id="rh" class="tab-content">
-        <div class="kpi-cards" id="kpiRH"></div>
-        <div class="charts-grid">
-            <div class="chart-container full-width">
-                <h3>📊 Evolução Mensal de Indicadores de RH</h3>
-                <div class="chart-wrapper"><canvas id="chartRHEvolucao"></canvas></div>
-            </div>
+        <div id="kpiRH"></div>
+        <div class="chart-container full-width">
+            <h3>📈 Evolução de Indicadores de RH</h3>
+            <div class="chart-wrapper"><canvas id="chartRHEvolucao"></canvas></div>
         </div>
-        <div class="table-container full-width" id="tableRHContainer"></div>
+        <div class="table-container">
+            <div id="tableRHContainer"></div>
+        </div>
     </div>
 
     <div id="insights" class="tab-content">
@@ -237,6 +255,16 @@
             return `${months[parseInt(mo) - 1]}/${y.slice(-2)}`;
         }
 
+        function getFaixaEtaria(idade) {
+            if (!idade || isNaN(idade)) return null;
+            const id = parseInt(idade);
+            if (id >= 0 && id <= 12) return '0-12';
+            if (id >= 13 && id <= 17) return '13-17';
+            if (id >= 18 && id <= 59) return '18-59';
+            if (id >= 60) return '60+';
+            return null;
+        }
+
         function initializeFilters() {
             const meses = new Set();
             const riscos = new Set();
@@ -244,14 +272,14 @@
             const municipios = new Set();
 
             (allData.atendimento_geral_mensal || []).forEach(r => meses.add(formatMesAno(r.Mes)));
-            (allData.atendimento_risco || []).forEach(r => riscos.add(r.Classificacao));
-            (allData.atendimento_sexo || []).forEach(r => sexos.add(r.Sexo));
-            (allData.atendimento_municipio || []).forEach(r => municipios.add(r.Municipio));
+            (allData.atendimento_risco || []).forEach(r => riscos.add(r.Classificacao?.trim()));
+            (allData.atendimento_sexo || []).forEach(r => sexos.add(r.Sexo?.trim()));
+            (allData.atendimento_municipio || []).forEach(r => municipios.add(r.Municipio?.trim()));
 
             populateSelect('filterMes', Array.from(meses).sort());
-            populateSelect('filterRisco', Array.from(riscos).sort());
-            populateSelect('filterSexo', Array.from(sexos).sort());
-            populateSelect('filterMunicipio', Array.from(municipios).sort());
+            populateSelect('filterRisco', Array.from(riscos).filter(r => r).sort());
+            populateSelect('filterSexo', Array.from(sexos).filter(s => s).sort());
+            populateSelect('filterMunicipio', Array.from(municipios).filter(m => m).sort());
         }
 
         function populateSelect(id, values) {
@@ -269,6 +297,7 @@
             const risco = document.getElementById('filterRisco').value;
             const sexo = document.getElementById('filterSexo').value;
             const municipio = document.getElementById('filterMunicipio').value;
+            const faixaEtaria = document.getElementById('filterFaixaEtaria').value;
 
             const filtered = {};
             for (const key in allData) {
@@ -277,9 +306,13 @@
                         const rowMes = formatMesAno(row.Mes);
                         if (rowMes !== mes) return false;
                     }
-                    if (risco && row.Classificacao && row.Classificacao !== risco) return false;
-                    if (sexo && row.Sexo && row.Sexo !== sexo) return false;
-                    if (municipio && row.Municipio && row.Municipio !== municipio) return false;
+                    if (risco && row.Classificacao && row.Classificacao.trim() !== risco) return false;
+                    if (sexo && row.Sexo && row.Sexo.trim() !== sexo) return false;
+                    if (municipio && row.Municipio && row.Municipio.trim() !== municipio) return false;
+                    if (faixaEtaria && row.Idade) {
+                        const rowFaixa = getFaixaEtaria(row.Idade);
+                        if (rowFaixa !== faixaEtaria) return false;
+                    }
                     return true;
                 });
             }
@@ -303,43 +336,62 @@
 
             const total = (d.atendimento_geral_mensal || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
             const intern = (d.internacoes_tipo || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const lab = (d.exames_laboratoriais || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const rad = (d.radiografias || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const remocoes = (d.logistica_transporte || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+            const taxa = total > 0 ? ((intern / total) * 100).toFixed(2) : 0;
+            const trans = (d.logistica_transporte || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
 
             [
-                { t: 'Atendimentos', v: total, c: 'primary' },
-                { t: 'Internações', v: intern, c: 'secondary' },
-                { t: 'Exames Lab', v: lab, c: 'primary' },
-                { t: 'Radiografias', v: rad, c: 'secondary' },
-                { t: 'Remoções', v: remocoes, c: 'warning' }
+                { t: 'Total de Atendimentos', v: total.toLocaleString('pt-BR'), c: 'primary' },
+                { t: 'Internações', v: intern.toLocaleString('pt-BR'), c: 'secondary' },
+                { t: 'Taxa de Ocupação', v: taxa + '%', c: 'warning' },
+                { t: 'Remoções', v: trans.toLocaleString('pt-BR'), c: 'primary' }
             ].forEach(kpi => {
                 const card = document.createElement('div');
                 card.className = `kpi-card ${kpi.c}`;
-                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v.toLocaleString('pt-BR')}</div>`;
+                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v}</div>`;
                 container.appendChild(card);
             });
 
-            const data = (d.atendimento_geral_mensal || []).sort((a, b) => a.Mes.localeCompare(b.Mes));
-            const ctx = document.getElementById('chartEvolucao').getContext('2d');
+            // Gráfico de Evolução
+            const evolData = (d.atendimento_geral_mensal || []).sort((a, b) => a.Mes.localeCompare(b.Mes));
+            const ctx1 = document.getElementById('chartEvolucao').getContext('2d');
             if (charts.evolucao) charts.evolucao.destroy();
-            charts.evolucao = new Chart(ctx, {
-                type: 'line',
+            
+            const isSingleMonth = evolData.length === 1;
+            charts.evolucao = new Chart(ctx1, {
+                type: isSingleMonth ? 'bar' : 'line',
                 data: {
-                    labels: data.map(r => formatMesAno(r.Mes)),
+                    labels: evolData.map(r => formatMesAno(r.Mes)),
                     datasets: [{
                         label: 'Atendimentos',
-                        data: data.map(r => parseInt(r.Quantidade || 0)),
+                        data: evolData.map(r => parseInt(r.Quantidade || 0)),
                         borderColor: '#0066cc',
-                        backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                        backgroundColor: isSingleMonth ? '#0066cc' : 'rgba(0, 102, 204, 0.1)',
                         tension: 0.4,
-                        fill: true,
+                        fill: !isSingleMonth,
                         borderWidth: 2,
-                        pointRadius: 5,
+                        pointRadius: isSingleMonth ? 0 : 5,
                         pointBackgroundColor: '#0066cc'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Gráfico de Risco
+            const riscoData = {};
+            (d.atendimento_risco || []).forEach(r => {
+                const key = r.Classificacao?.trim() || 'Desconhecido';
+                riscoData[key] = (riscoData[key] || 0) + parseInt(r.Quantidade || 0);
+            });
+            const ctx2 = document.getElementById('chartRisco').getContext('2d');
+            if (charts.risco) charts.risco.destroy();
+            charts.risco = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(riscoData),
+                    datasets: [{ data: Object.values(riscoData), backgroundColor: ['#ff6b6b', '#ffa500', '#ffff00', '#00aa66'], borderColor: '#fff', borderWidth: 2 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+                plugins: [ChartDataLabels]
             });
         }
 
@@ -348,227 +400,149 @@
             const container = document.getElementById('kpiAtendimento');
             container.innerHTML = '';
 
-            const imediato = (d.atendimento_risco || []).filter(r => r.Classificacao.includes('Imediato')).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const dez = (d.atendimento_risco || []).filter(r => r.Classificacao.includes('10')).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const sessenta = (d.atendimento_risco || []).filter(r => r.Classificacao.includes('60')).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const cento20 = (d.atendimento_risco || []).filter(r => r.Classificacao.includes('120')).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const cento240 = (d.atendimento_risco || []).filter(r => r.Classificacao.includes('240')).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+            const total = (d.atendimento_geral_mensal || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+            const riscoData = {};
+            (d.atendimento_risco || []).forEach(r => {
+                const key = r.Classificacao?.trim() || 'Desconhecido';
+                riscoData[key] = (riscoData[key] || 0) + parseInt(r.Quantidade || 0);
+            });
 
             [
-                { t: 'Imediato', v: imediato, c: 'warning' },
-                { t: '10 Min', v: dez, c: 'primary' },
-                { t: '60 Min', v: sessenta, c: 'secondary' },
-                { t: '120 Min', v: cento20, c: 'primary' },
-                { t: '240 Min', v: cento240, c: 'secondary' }
+                { t: 'Total', v: total.toLocaleString('pt-BR'), c: 'primary' },
+                { t: 'Imediato', v: (riscoData['Atendimento Imediato'] || 0).toLocaleString('pt-BR'), c: 'warning' },
+                { t: '10 Min', v: (riscoData['10 min'] || 0).toLocaleString('pt-BR'), c: 'secondary' },
+                { t: '60 Min', v: (riscoData['60 min'] || 0).toLocaleString('pt-BR'), c: 'primary' }
             ].forEach(kpi => {
                 const card = document.createElement('div');
                 card.className = `kpi-card ${kpi.c}`;
-                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v.toLocaleString('pt-BR')}</div>`;
+                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v}</div>`;
                 container.appendChild(card);
             });
 
-            const risco = {};
-            (d.atendimento_risco || []).forEach(r => {
-                risco[r.Classificacao] = (risco[r.Classificacao] || 0) + parseInt(r.Quantidade || 0);
+            // Gráfico de Tempo
+            const tempoData = {};
+            (d.atendimento_limite_tempo || []).forEach(r => {
+                const key = r.Classificacao?.trim() || 'Desconhecido';
+                if (!tempoData[key]) tempoData[key] = { dentro: 0, acima: 0 };
+                tempoData[key].dentro += r.Dentro_Limite || 0;
+                tempoData[key].acima += r.Acima_Limite || 0;
             });
-            const ctx1 = document.getElementById('chartRisco').getContext('2d');
-            if (charts.risco) charts.risco.destroy();
-            charts.risco = new Chart(ctx1, {
-                type: 'doughnut',
+            const ctx1 = document.getElementById('chartTempo').getContext('2d');
+            if (charts.tempo) charts.tempo.destroy();
+            charts.tempo = new Chart(ctx1, {
+                type: 'bar',
                 data: {
-                    labels: Object.keys(risco),
-                    datasets: [{ data: Object.values(risco), backgroundColor: ['#ff6b6b', '#ff9900', '#ffd700', '#00aa66', '#0066cc'], borderColor: '#fff', borderWidth: 2 }]
+                    labels: Object.keys(tempoData),
+                    datasets: [
+                        { label: 'Dentro do Limite', data: Object.values(tempoData).map(v => v.dentro), backgroundColor: '#00aa66' },
+                        { label: 'Acima do Limite', data: Object.values(tempoData).map(v => v.acima), backgroundColor: '#ff6b6b' }
+                    ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-                plugins: [ChartDataLabels]
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } } }
             });
 
-            const sexo = {};
+            // Gráfico de Sexo
+            const sexoData = {};
             (d.atendimento_sexo || []).forEach(r => {
-                sexo[r.Sexo] = (sexo[r.Sexo] || 0) + parseInt(r.Quantidade || 0);
+                sexoData[r.Sexo?.trim() || 'Desconhecido'] = (sexoData[r.Sexo?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
             });
             const ctx2 = document.getElementById('chartSexo').getContext('2d');
             if (charts.sexo) charts.sexo.destroy();
             charts.sexo = new Chart(ctx2, {
-                type: 'bar',
+                type: 'doughnut',
                 data: {
-                    labels: Object.keys(sexo),
-                    datasets: [{ label: 'Quantidade', data: Object.values(sexo), backgroundColor: '#0066cc' }]
+                    labels: Object.keys(sexoData),
+                    datasets: [{ data: Object.values(sexoData), backgroundColor: ['#ff69b4', '#4169e1'], borderColor: '#fff', borderWidth: 2 }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+                plugins: [ChartDataLabels]
             });
 
-            const mun = {};
-            (d.atendimento_municipio || []).forEach(r => {
-                mun[r.Municipio] = (mun[r.Municipio] || 0) + parseInt(r.Quantidade || 0);
+            // Gráfico de Faixa Etária
+            const faixaData = { '0-12': 0, '13-17': 0, '18-59': 0, '60+': 0 };
+            (d.atendimento_cid || []).forEach(r => {
+                const faixa = getFaixaEtaria(r.Idade);
+                if (faixa) faixaData[faixa]++;
             });
-            const sorted = Object.entries(mun).sort((a, b) => b[1] - a[1]).slice(0, 10);
-            const ctx3 = document.getElementById('chartMunicipio').getContext('2d');
-            if (charts.municipio) charts.municipio.destroy();
-            charts.municipio = new Chart(ctx3, {
+            const ctx3 = document.getElementById('chartFaixaEtaria').getContext('2d');
+            if (charts.faixaEtaria) charts.faixaEtaria.destroy();
+            charts.faixaEtaria = new Chart(ctx3, {
                 type: 'bar',
                 data: {
-                    labels: sorted.map(([k]) => k),
-                    datasets: [{ label: 'Atendimentos', data: sorted.map(([, v]) => v), backgroundColor: '#0066cc' }]
+                    labels: ['0-12 (Pediátrico)', '13-17 (Adolescente)', '18-59 (Adulto)', '60+ (Idoso)'],
+                    datasets: [{ label: 'Atendimentos', data: Object.values(faixaData), backgroundColor: '#0066cc' }]
+                },
+                options: { indexAxis: 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Gráfico de Município
+            const munData = {};
+            (d.atendimento_municipio || []).forEach(r => {
+                munData[r.Municipio?.trim() || 'Desconhecido'] = (munData[r.Municipio?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
+            });
+            const topMun = Object.entries(munData).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const ctx4 = document.getElementById('chartMunicipio').getContext('2d');
+            if (charts.municipio) charts.municipio.destroy();
+            charts.municipio = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: topMun.map(([k]) => k),
+                    datasets: [{ label: 'Atendimentos', data: topMun.map(([, v]) => v), backgroundColor: '#0066cc' }]
                 },
                 options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            const faixa = {};
-            (d.faixa_etaria || []).forEach(r => {
-                faixa[r.Faixa_Etaria] = (faixa[r.Faixa_Etaria] || 0) + parseInt(r.Quantidade || 0);
-            });
-            const ctx4 = document.getElementById('chartFaixaEtaria').getContext('2d');
-            if (charts.faixaEtaria) charts.faixaEtaria.destroy();
-            charts.faixaEtaria = new Chart(ctx4, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(faixa),
-                    datasets: [{ data: Object.values(faixa), backgroundColor: ['#0066cc', '#00aa66', '#ff9900', '#ff6b6b'], borderColor: '#fff', borderWidth: 2 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-                plugins: [ChartDataLabels]
-            });
-
-            // Tabela Limite de Tempo
-            const container_tempo = document.getElementById('tableLimiteTempoContainer');
-            const mes_selecionado = document.getElementById('filterMes').value;
-            let tempo_data = (d.atendimento_limite_tempo || []);
-            // Filtrar por mês se selecionado
-            if (mes_selecionado) {
-                tempo_data = tempo_data.filter(r => formatMesAno(r.Mes) === mes_selecionado);
-            }
-            tempo_data = tempo_data.sort((a, b) => {
-                if (a.Classificacao !== b.Classificacao) return a.Classificacao.localeCompare(b.Classificacao);
-                return a.Mes.localeCompare(b.Mes);
-            });
-            let tempo_html = '<h3>⏱️ Atendimentos Dentro/Fora do Prazo</h3><table><thead><tr><th>Classificação</th><th>Mês</th><th>Dentro do Limite</th><th>% Dentro</th><th>Acima do Limite</th><th>% Acima</th></tr></thead><tbody>';
-            tempo_data.forEach(r => {
-                tempo_html += `<tr><td>${r.Classificacao}</td><td>${formatMesAno(r.Mes)}</td><td class="text-right"><strong>${r.Dentro_Limite.toLocaleString('pt-BR')}</strong></td><td class="text-right">${(r.Pct_Dentro * 100).toFixed(1)}%</td><td class="text-right"><strong>${r.Acima_Limite.toLocaleString('pt-BR')}</strong></td><td class="text-right">${(r.Pct_Acima * 100).toFixed(1)}%</td></tr>`;
-            });
-            tempo_html += '</tbody></table>';
-            container_tempo.innerHTML = tempo_html;
-
             // Tabela CID
-            const container2 = document.getElementById('tableCIDContainer');
-            const mes_filtro = document.getElementById('filterMes').value;
-            let cid_data = (d.atendimento_cid || []);
-            // Filtrar por mês se selecionado
-            if (mes_filtro) {
-                cid_data = cid_data.filter(r => formatMesAno(r.Mes) === mes_filtro);
-            }
-            const cid = cid_data.sort((a, b) => parseInt(b.Quantidade || 0) - parseInt(a.Quantidade || 0)).slice(0, 50);
-            let html = '<h3>🏥 Top 50 CID</h3><table><thead><tr><th>#</th><th>CID</th><th>Mês</th><th>Quantidade</th></tr></thead><tbody>';
-            cid.forEach((r, i) => {
-                html += `<tr><td>${i + 1}</td><td>${r.CID_Full}</td><td>${formatMesAno(r.Mes)}</td><td class="text-right"><strong>${parseInt(r.Quantidade || 0).toLocaleString('pt-BR')}</strong></td></tr>`;
+            const cidData = (d.atendimento_cid || []).sort((a, b) => (b.Quantidade || 0) - (a.Quantidade || 0)).slice(0, 50);
+            let tableHtml = '<table><thead><tr><th>Rank</th><th>CID</th><th>Classificação</th><th>Quantidade</th></tr></thead><tbody>';
+            cidData.forEach((r, i) => {
+                tableHtml += `<tr><td>${i + 1}</td><td class="text-left">${r.CID_Full || r.CID || '-'}</td><td>${r.Classificacao?.trim() || '-'}</td><td class="text-right">${r.Quantidade || 0}</td></tr>`;
             });
-            html += '</tbody></table>';
-            container2.innerHTML = html;
+            tableHtml += '</tbody></table>';
+            document.getElementById('tableCIDContainer').innerHTML = tableHtml;
         }
 
         function renderAssistencial() {
             const d = getFiltered();
-            const container = document.getElementById('kpiAssistencial');
-            container.innerHTML = '';
 
-            const oxy = (d.logistica_oxigenio || []).reduce((s, r) => s + parseFloat(r.M3 || 0), 0);
-            const lab = (d.exames_laboratoriais || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const rad = (d.radiografias || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const proc = (d.procedimentos || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-
-            [
-                { t: 'Oxigênio (M³)', v: oxy.toFixed(0), c: 'primary' },
-                { t: 'Exames Lab', v: lab, c: 'secondary' },
-                { t: 'Radiografias', v: rad, c: 'warning' },
-                { t: 'Procedimentos', v: proc, c: 'primary' }
-            ].forEach(kpi => {
-                const card = document.createElement('div');
-                card.className = `kpi-card ${kpi.c}`;
-                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v.toLocaleString('pt-BR')}</div>`;
-                container.appendChild(card);
-            });
-
-            const oxyData = {};
-            (d.logistica_oxigenio || []).forEach(r => {
-                oxyData[r.Tipo] = (oxyData[r.Tipo] || 0) + parseFloat(r.M3 || 0);
-            });
-            const ctx = document.getElementById('chartOxigenio').getContext('2d');
-            if (charts.oxigenio) charts.oxigenio.destroy();
-            charts.oxigenio = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(oxyData),
-                    datasets: [{ data: Object.values(oxyData), backgroundColor: ['#0066cc', '#00aa66', '#ff9900'], borderColor: '#fff', borderWidth: 2 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-                plugins: [ChartDataLabels]
-            });
-
-            // Tabela Exames Laboratoriais com Ranking
-            const labByMes = {};
-            const labGeral = {};
+            // Exames
+            const examesData = {};
             (d.exames_laboratoriais || []).forEach(r => {
-                const mesFormatado = formatMesAno(r.Mes);
-                if (!labByMes[mesFormatado]) labByMes[mesFormatado] = {};
-                if (!labByMes[mesFormatado][r.Exame]) labByMes[mesFormatado][r.Exame] = 0;
-                labByMes[mesFormatado][r.Exame] += parseInt(r.Quantidade || 0);
-                
-                if (!labGeral[r.Exame]) labGeral[r.Exame] = 0;
-                labGeral[r.Exame] += parseInt(r.Quantidade || 0);
+                examesData[r.Exame?.trim() || 'Desconhecido'] = (examesData[r.Exame?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
             });
-
-            let labHtml = '<h3>🔬 Exames Laboratoriais - Ranking</h3><table><thead><tr><th>#</th><th>Exame</th><th>Total Geral</th><th>Mês Selecionado</th></tr></thead><tbody>';
-            const labRanking = Object.entries(labGeral).sort((a, b) => b[1] - a[1]).slice(0, 20);
-            labRanking.forEach((r, i) => {
-                const mesQty = Object.values(labByMes).reduce((s, mes) => s + (mes[r[0]] || 0), 0);
-                labHtml += `<tr><td>${i + 1}</td><td>${r[0].substring(0, 60)}...</td><td class="text-right"><strong>${r[1].toLocaleString('pt-BR')}</strong></td><td class="text-right">${mesQty.toLocaleString('pt-BR')}</td></tr>`;
+            const topExames = Object.entries(examesData).sort((a, b) => b[1] - a[1]).slice(0, 15);
+            let tableHtml = '<table><thead><tr><th>Rank</th><th>Exame</th><th>Quantidade</th></tr></thead><tbody>';
+            topExames.forEach((r, i) => {
+                tableHtml += `<tr><td>${i + 1}</td><td class="text-left">${r[0]}</td><td class="text-right">${r[1]}</td></tr>`;
             });
-            labHtml += '</tbody></table>';
-            document.getElementById('tableLabContainer').innerHTML = labHtml;
+            tableHtml += '</tbody></table>';
+            document.getElementById('tableExamesContainer').innerHTML = tableHtml;
 
-            // Tabela Radiografias com Ranking
-            const radByMes = {};
-            const radGeral = {};
+            // Radiografias
+            const radioData = {};
             (d.radiografias || []).forEach(r => {
-                const mesFormatado = formatMesAno(r.Mes);
-                if (!radByMes[mesFormatado]) radByMes[mesFormatado] = {};
-                if (!radByMes[mesFormatado][r.Exame]) radByMes[mesFormatado][r.Exame] = 0;
-                radByMes[mesFormatado][r.Exame] += parseInt(r.Quantidade || 0);
-                
-                if (!radGeral[r.Exame]) radGeral[r.Exame] = 0;
-                radGeral[r.Exame] += parseInt(r.Quantidade || 0);
+                radioData[r.Tipo?.trim() || 'Desconhecido'] = (radioData[r.Tipo?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
             });
-
-            let radHtml = '<h3>🖼️ Radiografias - Ranking</h3><table><thead><tr><th>#</th><th>Radiografia</th><th>Total Geral</th><th>Mês Selecionado</th></tr></thead><tbody>';
-            const radRanking = Object.entries(radGeral).sort((a, b) => b[1] - a[1]).slice(0, 20);
-            radRanking.forEach((r, i) => {
-                const mesQty = Object.values(radByMes).reduce((s, mes) => s + (mes[r[0]] || 0), 0);
-                radHtml += `<tr><td>${i + 1}</td><td>${r[0].substring(0, 60)}...</td><td class="text-right"><strong>${r[1].toLocaleString('pt-BR')}</strong></td><td class="text-right">${mesQty.toLocaleString('pt-BR')}</td></tr>`;
+            const topRadio = Object.entries(radioData).sort((a, b) => b[1] - a[1]).slice(0, 15);
+            tableHtml = '<table><thead><tr><th>Rank</th><th>Radiografia</th><th>Quantidade</th></tr></thead><tbody>';
+            topRadio.forEach((r, i) => {
+                tableHtml += `<tr><td>${i + 1}</td><td class="text-left">${r[0]}</td><td class="text-right">${r[1]}</td></tr>`;
             });
-            radHtml += '</tbody></table>';
-            document.getElementById('tableRadiografiaContainer').innerHTML = radHtml;
+            tableHtml += '</tbody></table>';
+            document.getElementById('tableRadiografiasContainer').innerHTML = tableHtml;
 
-            // Tabela Procedimentos com Ranking
-            const procByMes = {};
-            const procGeral = {};
+            // Procedimentos
+            const procData = {};
             (d.procedimentos || []).forEach(r => {
-                const mesFormatado = formatMesAno(r.Mes);
-                if (!procByMes[mesFormatado]) procByMes[mesFormatado] = {};
-                if (!procByMes[mesFormatado][r.Procedimento]) procByMes[mesFormatado][r.Procedimento] = 0;
-                procByMes[mesFormatado][r.Procedimento] += parseInt(r.Quantidade || 0);
-                
-                if (!procGeral[r.Procedimento]) procGeral[r.Procedimento] = 0;
-                procGeral[r.Procedimento] += parseInt(r.Quantidade || 0);
+                procData[r.Procedimento?.trim() || 'Desconhecido'] = (procData[r.Procedimento?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
             });
-
-            let procHtml = '<h3>⚕️ Procedimentos - Ranking</h3><table><thead><tr><th>#</th><th>Procedimento</th><th>Total Geral</th><th>Mês Selecionado</th></tr></thead><tbody>';
-            const procRanking = Object.entries(procGeral).sort((a, b) => b[1] - a[1]).slice(0, 20);
-            procRanking.forEach((r, i) => {
-                const mesQty = Object.values(procByMes).reduce((s, mes) => s + (mes[r[0]] || 0), 0);
-                procHtml += `<tr><td>${i + 1}</td><td>${r[0].substring(0, 60)}...</td><td class="text-right"><strong>${r[1].toLocaleString('pt-BR')}</strong></td><td class="text-right">${mesQty.toLocaleString('pt-BR')}</td></tr>`;
+            const topProc = Object.entries(procData).sort((a, b) => b[1] - a[1]).slice(0, 15);
+            tableHtml = '<table><thead><tr><th>Rank</th><th>Procedimento</th><th>Quantidade</th></tr></thead><tbody>';
+            topProc.forEach((r, i) => {
+                tableHtml += `<tr><td>${i + 1}</td><td class="text-left">${r[0]}</td><td class="text-right">${r[1]}</td></tr>`;
             });
-            procHtml += '</tbody></table>';
-            document.getElementById('tableProcedimentosContainer').innerHTML = procHtml;
+            tableHtml += '</tbody></table>';
+            document.getElementById('tableProcedimentosContainer').innerHTML = tableHtml;
         }
 
         function renderOperacional() {
@@ -576,50 +550,32 @@
             const container = document.getElementById('kpiOperacional');
             container.innerHTML = '';
 
-            const intern = (d.internacoes_tipo || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const total = (d.atendimento_geral_mensal || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const taxa = total > 0 ? ((intern / total) * 100).toFixed(2) : 0;
-            const res = (d.logistica_residuos || []).reduce((s, r) => s + parseFloat(r.KG || 0), 0);
-            const lav = (d.logistica_lavanderia || []).reduce((s, r) => s + parseFloat(r.Peso || 0), 0);
             const trans = (d.logistica_transporte || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+            const lav = (d.logistica_lavanderia || []).reduce((s, r) => s + parseFloat(r.Peso || 0), 0);
+            const oxy = (d.logistica_oxigenio || []).reduce((s, r) => s + parseFloat(r.M3 || 0), 0);
+            const res = (d.logistica_residuos || []).reduce((s, r) => s + parseFloat(r.KG || 0), 0);
 
             [
-                { t: 'Internações', v: intern, c: 'primary' },
-                { t: 'Taxa Ocupação', v: taxa + '%', c: 'warning' },
-                { t: 'Resíduos (KG)', v: res.toFixed(0), c: 'secondary' },
-                { t: 'Lavanderia (KG)', v: lav.toFixed(0), c: 'primary' },
-                { t: 'Remoções', v: trans, c: 'secondary' }
+                { t: 'Remoções', v: trans.toLocaleString('pt-BR'), c: 'primary' },
+                { t: 'Lavanderia (KG)', v: lav.toLocaleString('pt-BR', { maximumFractionDigits: 0 }), c: 'secondary' },
+                { t: 'Oxigênio (M³)', v: oxy.toLocaleString('pt-BR', { maximumFractionDigits: 0 }), c: 'warning' },
+                { t: 'Resíduos (KG)', v: res.toLocaleString('pt-BR', { maximumFractionDigits: 0 }), c: 'primary' }
             ].forEach(kpi => {
                 const card = document.createElement('div');
                 card.className = `kpi-card ${kpi.c}`;
-                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v.toLocaleString('pt-BR')}</div>`;
+                card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v}</div>`;
                 container.appendChild(card);
             });
 
-            const internData = {};
-            (d.internacoes_tipo || []).forEach(r => {
-                internData[r.Tipo] = (internData[r.Tipo] || 0) + parseInt(r.Quantidade || 0);
-            });
-            const ctx1 = document.getElementById('chartInternacaoTipo').getContext('2d');
-            if (charts.internacaoTipo) charts.internacaoTipo.destroy();
-            charts.internacaoTipo = new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(internData),
-                    datasets: [{ data: Object.values(internData), backgroundColor: ['#0066cc', '#00aa66'], borderColor: '#fff', borderWidth: 2 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-                plugins: [ChartDataLabels]
-            });
-
+            // Gráfico Remoções
             const transData = {};
             (d.logistica_transporte || []).forEach(r => {
-                transData[r.Destino] = (transData[r.Destino] || 0) + parseInt(r.Quantidade || 0);
+                transData[r.Destino?.trim() || 'Desconhecido'] = (transData[r.Destino?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
             });
             const transSorted = Object.entries(transData).sort((a, b) => b[1] - a[1]);
-            const ctx2 = document.getElementById('chartTransporte').getContext('2d');
-            if (charts.transporte) charts.transporte.destroy();
-            charts.transporte = new Chart(ctx2, {
+            const ctx1 = document.getElementById('chartRemocoesDestino').getContext('2d');
+            if (charts.remocoesDestino) charts.remocoesDestino.destroy();
+            charts.remocoesDestino = new Chart(ctx1, {
                 type: 'bar',
                 data: {
                     labels: transSorted.map(([k]) => k),
@@ -628,155 +584,31 @@
                 options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            const resData = {};
-            (d.logistica_residuos || []).forEach(r => {
-                resData[r.Grupo] = (resData[r.Grupo] || 0) + parseFloat(r.KG || 0);
-            });
-            const ctx3 = document.getElementById('chartResiduos').getContext('2d');
-            if (charts.residuos) charts.residuos.destroy();
-            charts.residuos = new Chart(ctx3, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(resData),
-                    datasets: [{ data: Object.values(resData), backgroundColor: ['#ff6b6b', '#ff9900', '#ffd700'], borderColor: '#fff', borderWidth: 2 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-                plugins: [ChartDataLabels]
-            });
-
+            // Gráfico Lavanderia
             const lavData = (d.logistica_lavanderia || []).sort((a, b) => a.Mes.localeCompare(b.Mes));
-            const ctx4 = document.getElementById('chartLavanderia').getContext('2d');
+            const ctx2 = document.getElementById('chartLavanderia').getContext('2d');
             if (charts.lavanderia) charts.lavanderia.destroy();
-            charts.lavanderia = new Chart(ctx4, {
-                type: 'line',
+            
+            const isSingleMonth = lavData.length === 1;
+            charts.lavanderia = new Chart(ctx2, {
+                type: isSingleMonth ? 'bar' : 'line',
                 data: {
                     labels: lavData.map(r => formatMesAno(r.Mes)),
                     datasets: [{
                         label: 'Peso (KG)',
                         data: lavData.map(r => parseFloat(r.Peso || 0)),
                         borderColor: '#0066cc',
-                        backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                        backgroundColor: isSingleMonth ? '#0066cc' : 'rgba(0, 102, 204, 0.1)',
                         tension: 0.4,
-                        fill: true,
+                        fill: !isSingleMonth,
                         borderWidth: 2,
-                        pointRadius: 5,
+                        pointRadius: isSingleMonth ? 0 : 5,
                         pointBackgroundColor: '#0066cc'
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } } }
             });
         }
-
-        function renderInsights() {
-            const d = getFiltered();
-            const container = document.getElementById('insightsContent');
-
-            const total = (d.atendimento_geral_mensal || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const intern = (d.internacoes_tipo || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-            const taxa = total > 0 ? ((intern / total) * 100).toFixed(2) : 0;
-
-            const risco = {};
-            (d.atendimento_risco || []).forEach(r => {
-                risco[r.Classificacao] = (risco[r.Classificacao] || 0) + parseInt(r.Quantidade || 0);
-            });
-
-            const sexo = {};
-            (d.atendimento_sexo || []).forEach(r => {
-                sexo[r.Sexo] = (sexo[r.Sexo] || 0) + parseInt(r.Quantidade || 0);
-            });
-
-            const mun = {};
-            (d.atendimento_municipio || []).forEach(r => {
-                mun[r.Municipio] = (mun[r.Municipio] || 0) + parseInt(r.Quantidade || 0);
-            });
-            const topMun = Object.entries(mun).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-            const oxy = (d.logistica_oxigenio || []).reduce((s, r) => s + parseFloat(r.M3 || 0), 0);
-            const res = (d.logistica_residuos || []).reduce((s, r) => s + parseFloat(r.KG || 0), 0);
-            const lav = (d.logistica_lavanderia || []).reduce((s, r) => s + parseFloat(r.Peso || 0), 0);
-            const trans = (d.logistica_transporte || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
-
-            // Análise de tempo
-            const tempoTotal = (d.atendimento_limite_tempo || []).reduce((s, r) => s + r.Dentro_Limite + r.Acima_Limite, 0);
-            const tempoDentro = (d.atendimento_limite_tempo || []).reduce((s, r) => s + r.Dentro_Limite, 0);
-            const tempoAcima = (d.atendimento_limite_tempo || []).reduce((s, r) => s + r.Acima_Limite, 0);
-            const pctDentro = tempoTotal > 0 ? ((tempoDentro / tempoTotal) * 100).toFixed(1) : 0;
-            const pctAcima = tempoTotal > 0 ? ((tempoAcima / tempoTotal) * 100).toFixed(1) : 0;
-
-            let html = `<div class="metrics-grid">
-                <div class="metric-card"><h4>📊 VOLUME DE ATENDIMENTOS</h4><table class="metrics-table">
-                    <tr><td>Total:</td><td>${total.toLocaleString('pt-BR')}</td></tr>
-                    <tr><td>Internações:</td><td>${intern.toLocaleString('pt-BR')}</td></tr>
-                    <tr><td>Taxa Ocupação:</td><td>${taxa}%</td></tr>
-                </table></div>
-                <div class="metric-card"><h4>⏱️ TEMPO DE ATENDIMENTO</h4><table class="metrics-table">
-                    <tr><td>Total Atendido:</td><td>${tempoTotal.toLocaleString('pt-BR')}</td></tr>
-                    <tr><td>Dentro do Prazo:</td><td>${tempoDentro.toLocaleString('pt-BR')} (${pctDentro}%)</td></tr>
-                    <tr><td>Acima do Prazo:</td><td>${tempoAcima.toLocaleString('pt-BR')} (${pctAcima}%)</td></tr>
-                </table></div>
-                <div class="metric-card"><h4>⚠️ CLASSIFICAÇÃO DE RISCO</h4><table class="metrics-table">
-                    ${Object.entries(risco).map(([k, v]) => `<tr><td>${k}:</td><td>${v.toLocaleString('pt-BR')} (${((v/total)*100).toFixed(1)}%)</td></tr>`).join('')}
-                </table></div>
-                <div class="metric-card"><h4>👥 DISTRIBUIÇÃO POR SEXO</h4><table class="metrics-table">
-                    ${Object.entries(sexo).map(([k, v]) => `<tr><td>${k}:</td><td>${v.toLocaleString('pt-BR')} (${((v/total)*100).toFixed(1)}%)</td></tr>`).join('')}
-                </table></div>
-                <div class="metric-card"><h4>📍 TOP 5 MUNICÍPIOS</h4><table class="metrics-table">
-                    ${topMun.map(([k, v]) => `<tr><td>${k}:</td><td>${v.toLocaleString('pt-BR')} (${((v/total)*100).toFixed(1)}%)</td></tr>`).join('')}
-                </table></div>
-                <div class="metric-card"><h4>💨 CONSUMO DE OXIGÊNIO</h4><table class="metrics-table">
-                    <tr><td>Total (M³):</td><td>${oxy.toFixed(0).toLocaleString('pt-BR')}</td></tr>
-                    <tr><td>Por Atendimento:</td><td>${(oxy / total).toFixed(2)} M³</td></tr>
-                </table></div>
-                <div class="metric-card"><h4>♻️ GESTÃO DE RESÍDUOS</h4><table class="metrics-table">
-                    <tr><td>Total (KG):</td><td>${res.toFixed(0).toLocaleString('pt-BR')}</td></tr>
-                    <tr><td>Por Atendimento:</td><td>${(res / total).toFixed(2)} KG</td></tr>
-                </table></div>
-                <div class="metric-card"><h4>🧺 OPERAÇÕES LAVANDERIA</h4><table class="metrics-table">
-                    <tr><td>Total (KG):</td><td>${lav.toFixed(0).toLocaleString('pt-BR')}</td></tr>
-                    <tr><td>Por Internação:</td><td>${(lav / intern).toFixed(2)} KG</td></tr>
-                </table></div>
-                <div class="metric-card"><h4>🚑 REMOÇÕES</h4><table class="metrics-table">
-                    <tr><td>Total:</td><td>${trans.toLocaleString('pt-BR')}</td></tr>
-                    <tr><td>% de Internações:</td><td>${((trans / intern) * 100).toFixed(1)}%</td></tr>
-                </table></div>
-            </div>`;
-
-            // Tabela Faixa Etária
-            const faixa = {};
-            (d.faixa_etaria || []).forEach(r => {
-                faixa[r.Faixa_Etaria] = (faixa[r.Faixa_Etaria] || 0) + parseInt(r.Quantidade || 0);
-            });
-            let faixaHtml = '<h3>📊 Distribuição por Faixa Etária</h3><table style="width:100%; border-collapse: collapse;"><thead><tr style="background:#f0f0f0;"><th style="padding:8px; text-align:left; border:1px solid #ddd;">Faixa Etária</th><th style="padding:8px; text-align:right; border:1px solid #ddd;">Quantidade</th><th style="padding:8px; text-align:right; border:1px solid #ddd;">%</th></tr></thead><tbody>';
-            Object.entries(faixa).forEach(([k, v]) => {
-                faixaHtml += `<tr><td style="padding:8px; border:1px solid #ddd;">${k}</td><td style="padding:8px; text-align:right; border:1px solid #ddd;">${v.toLocaleString('pt-BR')}</td><td style="padding:8px; text-align:right; border:1px solid #ddd;">${((v/total)*100).toFixed(1)}%</td></tr>`;
-            });
-            faixaHtml += '</tbody></table>';
-            html += `<div class="metric-card" style="grid-column: span 2;">${faixaHtml}</div>`;
-
-            // Tabela RH
-            const mes_filtro_rh = document.getElementById('filterMes').value;
-            let rh_filtrado = (d.rh_movimentacao || []);
-            if (mes_filtro_rh) {
-                rh_filtrado = rh_filtrado.filter(r => formatMesAno(r.Mes + '-01') === mes_filtro_rh);
-            }
-            const atestados = rh_filtrado.reduce((s, r) => s + r.Atestados, 0);
-            const faltas = rh_filtrado.reduce((s, r) => s + r.Faltas, 0);
-            const advertencias = rh_filtrado.reduce((s, r) => s + r.Advertencias, 0);
-            const rescisao = rh_filtrado.reduce((s, r) => s + r.Rescisao, 0);
-            let rhHtml = '<h3>👥 Indicadores de RH</h3><table style="width:100%; border-collapse: collapse;"><thead><tr style="background:#f0f0f0;"><th style="padding:8px; text-align:left; border:1px solid #ddd;">Indicador</th><th style="padding:8px; text-align:right; border:1px solid #ddd;">Quantidade</th></tr></thead><tbody>';
-            rhHtml += `<tr><td style="padding:8px; border:1px solid #ddd;">Atestados</td><td style="padding:8px; text-align:right; border:1px solid #ddd;">${atestados.toLocaleString('pt-BR')}</td></tr>`;
-            rhHtml += `<tr><td style="padding:8px; border:1px solid #ddd;">Faltas</td><td style="padding:8px; text-align:right; border:1px solid #ddd;">${faltas.toLocaleString('pt-BR')}</td></tr>`;
-            rhHtml += `<tr><td style="padding:8px; border:1px solid #ddd;">Advertências</td><td style="padding:8px; text-align:right; border:1px solid #ddd;">${advertencias.toLocaleString('pt-BR')}</td></tr>`;
-            rhHtml += `<tr><td style="padding:8px; border:1px solid #ddd;">Rescisões</td><td style="padding:8px; text-align:right; border:1px solid #ddd;">${rescisao.toLocaleString('pt-BR')}</td></tr>`;
-            rhHtml += '</tbody></table>';
-            html += `<div class="metric-card" style="grid-column: span 2;">${rhHtml}</div>`;
-
-            container.innerHTML = html;
-
-            container.innerHTML = html;
-            document.getElementById('dataAtualizacao').textContent = new Date().toLocaleDateString('pt-BR');
-        }
-
 
         function renderRH() {
             const d = getFiltered();
@@ -789,13 +621,19 @@
                 rh_filtrado = rh_filtrado.filter(r => formatMesAno(r.Mes + '-01') === mes_filtro_rh);
             }
 
-            const atestados = rh_filtrado.reduce((s, r) => s + r.Atestados, 0);
-            const faltas = rh_filtrado.reduce((s, r) => s + r.Faltas, 0);
-            const advertencias = rh_filtrado.reduce((s, r) => s + r.Advertencias, 0);
-            const suspensao = rh_filtrado.reduce((s, r) => s + r.Suspensao, 0);
-            const rescisao = rh_filtrado.reduce((s, r) => s + r.Rescisao, 0);
+            const atestados = rh_filtrado.reduce((s, r) => s + (r.Atestados || 0), 0);
+            const faltas = rh_filtrado.reduce((s, r) => s + (r.Faltas || 0), 0);
+            const advertencias = rh_filtrado.reduce((s, r) => s + (r.Advertencias || 0), 0);
+            const suspensao = rh_filtrado.reduce((s, r) => s + (r.Suspensao || 0), 0);
+            const rescisao = rh_filtrado.reduce((s, r) => s + (r.Rescisao || 0), 0);
 
-            [{ t: 'Atestados', v: atestados, c: 'warning' }, { t: 'Faltas', v: faltas, c: 'primary' }, { t: 'Advertências', v: advertencias, c: 'secondary' }, { t: 'Suspensão', v: suspensao, c: 'warning' }, { t: 'Rescisões', v: rescisao, c: 'primary' }].forEach(kpi => {
+            [
+                { t: 'Atestados', v: atestados, c: 'warning' },
+                { t: 'Faltas', v: faltas, c: 'primary' },
+                { t: 'Advertências', v: advertencias, c: 'secondary' },
+                { t: 'Suspensão', v: suspensao, c: 'warning' },
+                { t: 'Rescisões', v: rescisao, c: 'primary' }
+            ].forEach(kpi => {
                 const card = document.createElement('div');
                 card.className = `kpi-card ${kpi.c}`;
                 card.innerHTML = `<h3>${kpi.t}</h3><div class="value">${kpi.v.toLocaleString('pt-BR')}</div>`;
@@ -806,16 +644,18 @@
             const rhDataFiltrado = mes_filtro_rh ? rhData.filter(r => formatMesAno(r.Mes + '-01') === mes_filtro_rh) : rhData;
             const ctx = document.getElementById('chartRHEvolucao').getContext('2d');
             if (charts.rhEvolucao) charts.rhEvolucao.destroy();
+            
+            const isSingleMonth = rhDataFiltrado.length === 1;
             charts.rhEvolucao = new Chart(ctx, {
-                type: 'line',
+                type: isSingleMonth ? 'bar' : 'line',
                 data: {
                     labels: rhDataFiltrado.map(r => formatMesAno(r.Mes + '-01')),
                     datasets: [
-                        { label: 'Atestados', data: rhDataFiltrado.map(r => r.Atestados), borderColor: '#ff9900', backgroundColor: 'rgba(255, 153, 0, 0.1)', tension: 0.4, fill: true },
-                        { label: 'Faltas', data: rhDataFiltrado.map(r => r.Faltas), borderColor: '#ff6b6b', backgroundColor: 'rgba(255, 107, 107, 0.1)', tension: 0.4, fill: true },
-                        { label: 'Advertências', data: rhDataFiltrado.map(r => r.Advertencias), borderColor: '#0066cc', backgroundColor: 'rgba(0, 102, 204, 0.1)', tension: 0.4, fill: true },
-                        { label: 'Suspensão', data: rhDataFiltrado.map(r => r.Suspensao), borderColor: '#00aa66', backgroundColor: 'rgba(0, 170, 102, 0.1)', tension: 0.4, fill: true },
-                        { label: 'Rescisões', data: rhDataFiltrado.map(r => r.Rescisao), borderColor: '#9933cc', backgroundColor: 'rgba(153, 51, 204, 0.1)', tension: 0.4, fill: true }
+                        { label: 'Atestados', data: rhDataFiltrado.map(r => r.Atestados || 0), borderColor: '#ff9900', backgroundColor: isSingleMonth ? '#ff9900' : 'rgba(255, 153, 0, 0.1)', tension: 0.4, fill: !isSingleMonth },
+                        { label: 'Faltas', data: rhDataFiltrado.map(r => r.Faltas || 0), borderColor: '#ff6b6b', backgroundColor: isSingleMonth ? '#ff6b6b' : 'rgba(255, 107, 107, 0.1)', tension: 0.4, fill: !isSingleMonth },
+                        { label: 'Advertências', data: rhDataFiltrado.map(r => r.Advertencias || 0), borderColor: '#0066cc', backgroundColor: isSingleMonth ? '#0066cc' : 'rgba(0, 102, 204, 0.1)', tension: 0.4, fill: !isSingleMonth },
+                        { label: 'Suspensão', data: rhDataFiltrado.map(r => r.Suspensao || 0), borderColor: '#00aa66', backgroundColor: isSingleMonth ? '#00aa66' : 'rgba(0, 170, 102, 0.1)', tension: 0.4, fill: !isSingleMonth },
+                        { label: 'Rescisões', data: rhDataFiltrado.map(r => r.Rescisao || 0), borderColor: '#9933cc', backgroundColor: isSingleMonth ? '#9933cc' : 'rgba(153, 51, 204, 0.1)', tension: 0.4, fill: !isSingleMonth }
                     ]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom' } } }
@@ -823,10 +663,111 @@
 
             let tableHtml = '<h3>📋 Resumo Mensal de Indicadores de RH</h3><table><thead><tr><th>Mês</th><th>Atestados</th><th>Faltas</th><th>Advertências</th><th>Suspensão</th><th>Rescisões</th></tr></thead><tbody>';
             rhDataFiltrado.forEach(r => {
-                tableHtml += `<tr><td>${formatMesAno(r.Mes + '-01')}</td><td class="text-right">${r.Atestados}</td><td class="text-right">${r.Faltas}</td><td class="text-right">${r.Advertencias}</td><td class="text-right">${r.Suspensao}</td><td class="text-right">${r.Rescisao}</td></tr>`;
+                tableHtml += `<tr><td>${formatMesAno(r.Mes + '-01')}</td><td class="text-right">${r.Atestados || 0}</td><td class="text-right">${r.Faltas || 0}</td><td class="text-right">${r.Advertencias || 0}</td><td class="text-right">${r.Suspensao || 0}</td><td class="text-right">${r.Rescisao || 0}</td></tr>`;
             });
             tableHtml += '</tbody></table>';
             document.getElementById('tableRHContainer').innerHTML = tableHtml;
+        }
+
+        function renderInsights() {
+            const d = getFiltered();
+            const container = document.getElementById('insightsContent');
+
+            const total = (d.atendimento_geral_mensal || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+            const intern = (d.internacoes_tipo || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+            const taxa = total > 0 ? ((intern / total) * 100).toFixed(2) : 0;
+
+            const risco = {};
+            (d.atendimento_risco || []).forEach(r => {
+                risco[r.Classificacao?.trim() || 'Desconhecido'] = (risco[r.Classificacao?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
+            });
+
+            const sexo = {};
+            (d.atendimento_sexo || []).forEach(r => {
+                sexo[r.Sexo?.trim() || 'Desconhecido'] = (sexo[r.Sexo?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
+            });
+
+            const mun = {};
+            (d.atendimento_municipio || []).forEach(r => {
+                mun[r.Municipio?.trim() || 'Desconhecido'] = (mun[r.Municipio?.trim() || 'Desconhecido'] || 0) + parseInt(r.Quantidade || 0);
+            });
+            const topMun = Object.entries(mun).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            const oxy = (d.logistica_oxigenio || []).reduce((s, r) => s + parseFloat(r.M3 || 0), 0);
+            const res = (d.logistica_residuos || []).reduce((s, r) => s + parseFloat(r.KG || 0), 0);
+            const lav = (d.logistica_lavanderia || []).reduce((s, r) => s + parseFloat(r.Peso || 0), 0);
+            const trans = (d.logistica_transporte || []).reduce((s, r) => s + parseInt(r.Quantidade || 0), 0);
+
+            const tempoTotal = (d.atendimento_limite_tempo || []).reduce((s, r) => s + (r.Dentro_Limite || 0) + (r.Acima_Limite || 0), 0);
+            const tempoDentro = (d.atendimento_limite_tempo || []).reduce((s, r) => s + (r.Dentro_Limite || 0), 0);
+            const tempoAcima = tempoTotal - tempoDentro;
+            const tempoPercent = tempoTotal > 0 ? ((tempoDentro / tempoTotal) * 100).toFixed(2) : 0;
+
+            const rhData = (d.rh_movimentacao || []);
+            const atestados = rhData.reduce((s, r) => s + (r.Atestados || 0), 0);
+            const faltas = rhData.reduce((s, r) => s + (r.Faltas || 0), 0);
+            const advertencias = rhData.reduce((s, r) => s + (r.Advertencias || 0), 0);
+            const rescisao = rhData.reduce((s, r) => s + (r.Rescisao || 0), 0);
+
+            const faixaData = { '0-12': 0, '13-17': 0, '18-59': 0, '60+': 0 };
+            (d.atendimento_cid || []).forEach(r => {
+                const faixa = getFaixaEtaria(r.Idade);
+                if (faixa) faixaData[faixa]++;
+            });
+
+            let html = `
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h4>📊 Indicadores Gerais</h4>
+                        <table class="metrics-table">
+                            <tr><td>Total de Atendimentos</td><td>${total.toLocaleString('pt-BR')}</td></tr>
+                            <tr><td>Internações</td><td>${intern.toLocaleString('pt-BR')}</td></tr>
+                            <tr><td>Taxa de Ocupação</td><td>${taxa}%</td></tr>
+                        </table>
+                    </div>
+                    <div class="metric-card">
+                        <h4>⏱️ Tempo de Atendimento</h4>
+                        <table class="metrics-table">
+                            <tr><td>Dentro do Prazo</td><td>${tempoDentro.toLocaleString('pt-BR')} (${tempoPercent}%)</td></tr>
+                            <tr><td>Acima do Prazo</td><td>${tempoAcima.toLocaleString('pt-BR')} (${(100 - tempoPercent).toFixed(2)}%)</td></tr>
+                        </table>
+                    </div>
+                    <div class="metric-card">
+                        <h4>👥 Indicadores de RH</h4>
+                        <table class="metrics-table">
+                            <tr><td>Atestados</td><td>${atestados.toLocaleString('pt-BR')}</td></tr>
+                            <tr><td>Faltas</td><td>${faltas.toLocaleString('pt-BR')}</td></tr>
+                            <tr><td>Advertências</td><td>${advertencias.toLocaleString('pt-BR')}</td></tr>
+                            <tr><td>Rescisões</td><td>${rescisao.toLocaleString('pt-BR')}</td></tr>
+                        </table>
+                    </div>
+                    <div class="metric-card">
+                        <h4>🏘️ Top 5 Municípios</h4>
+                        <table class="metrics-table">
+                            ${topMun.map(([m, q]) => `<tr><td>${m}</td><td>${q.toLocaleString('pt-BR')}</td></tr>`).join('')}
+                        </table>
+                    </div>
+                    <div class="metric-card">
+                        <h4>📊 Distribuição por Faixa Etária</h4>
+                        <table class="metrics-table">
+                            <tr><td>0-12 (Pediátrico)</td><td>${faixaData['0-12'].toLocaleString('pt-BR')}</td></tr>
+                            <tr><td>13-17 (Adolescente)</td><td>${faixaData['13-17'].toLocaleString('pt-BR')}</td></tr>
+                            <tr><td>18-59 (Adulto)</td><td>${faixaData['18-59'].toLocaleString('pt-BR')}</td></tr>
+                            <tr><td>60+ (Idoso)</td><td>${faixaData['60+'].toLocaleString('pt-BR')}</td></tr>
+                        </table>
+                    </div>
+                    <div class="metric-card">
+                        <h4>🏥 Infraestrutura</h4>
+                        <table class="metrics-table">
+                            <tr><td>Oxigênio (M³)</td><td>${oxy.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</td></tr>
+                            <tr><td>Lavanderia (KG)</td><td>${lav.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</td></tr>
+                            <tr><td>Resíduos (KG)</td><td>${res.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</td></tr>
+                            <tr><td>Remoções</td><td>${trans.toLocaleString('pt-BR')}</td></tr>
+                        </table>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
         }
 
         function showTab(name) {
