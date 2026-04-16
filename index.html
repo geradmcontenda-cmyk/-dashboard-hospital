@@ -273,13 +273,23 @@
             const filtered = {};
             for (const key in allData) {
                 filtered[key] = allData[key].filter(row => {
+                    // Filtro de mês
                     if (mes && row.Mes) {
                         const rowMes = formatMesAno(row.Mes);
                         if (rowMes !== mes) return false;
                     }
-                    if (risco && row.Classificacao && row.Classificacao !== risco) return false;
-                    if (sexo && row.Sexo && row.Sexo !== sexo) return false;
-                    if (municipio && row.Municipio && row.Municipio !== municipio) return false;
+                    // Filtro de risco - comparar com trim() para evitar espaços
+                    if (risco && row.Classificacao) {
+                        if (row.Classificacao.trim() !== risco.trim()) return false;
+                    }
+                    // Filtro de sexo - comparar com trim()
+                    if (sexo && row.Sexo) {
+                        if (row.Sexo.trim() !== sexo.trim()) return false;
+                    }
+                    // Filtro de município - comparar com trim()
+                    if (municipio && row.Municipio) {
+                        if (row.Municipio.trim() !== municipio.trim()) return false;
+                    }
                     return true;
                 });
             }
