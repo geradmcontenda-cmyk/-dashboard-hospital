@@ -231,10 +231,35 @@
 
         function formatMesAno(m) {
             if (!m) return '-';
-            if (m.includes('/')) return m;
-            const [y, mo] = m.split('-');
-            const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-            return `${months[parseInt(mo) - 1]}/${y.slice(-2)}`;
+            
+            // Se já está em formato "Abr/25", retorna
+            if (m.match(/^[A-Za-z]{3}\/\d{2}$/)) return m;
+            
+            // Se está em formato "Abril/2025", converte para "Abr/25"
+            if (m.includes('/')) {
+                const parts = m.split('/');
+                const meses = { 'janeiro': 'Jan', 'fevereiro': 'Fev', 'março': 'Mar', 'abril': 'Abr', 'maio': 'Mai', 'junho': 'Jun', 'julho': 'Jul', 'agosto': 'Ago', 'setembro': 'Set', 'outubro': 'Out', 'novembro': 'Nov', 'dezembro': 'Dez' };
+                const mesAbrev = meses[parts[0].toLowerCase()] || parts[0].substring(0, 3);
+                const yearShort = parts[1].substring(2);
+                return `${mesAbrev}/${yearShort}`;
+            }
+            
+            // Se está em formato "YYYY-MM-DD" ou "YYYY-MM"
+            if (m.includes('-')) {
+                const parts = m.split('-');
+                const y = parts[0];
+                const mo = parts[1];
+                const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                return `${months[parseInt(mo) - 1]}/${y.slice(-2)}`;
+            }
+            
+            // Se está em formato inválido como "1-01-01", tenta corrigir
+            if (m.match(/^\d-\d{2}-\d{2}$/)) {
+                // Formato "1-01-01" é inválido, ignora
+                return '-';
+            }
+            
+            return m;
         }
 
         function initializeFilters() {
@@ -273,9 +298,11 @@
             const filtered = {};
             for (const key in allData) {
                 filtered[key] = allData[key].filter(row => {
-                    // Filtro de mês
+                    // Filtro de mês - normaliza o formato da data
                     if (mes && row.Mes) {
                         const rowMes = formatMesAno(row.Mes);
+                        // Se a data é inválida (retorna '-'), ignora o filtro
+                        if (rowMes === '-') return false;
                         if (rowMes !== mes) return false;
                     }
                     // Filtro de risco - comparar com trim() para evitar espaços
