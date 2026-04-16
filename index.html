@@ -480,7 +480,11 @@
             });
             let tempo_html = '<h3>⏱️ Atendimentos Dentro/Fora do Prazo</h3><table><thead><tr><th>Classificação</th><th>Mês</th><th>Dentro do Limite</th><th>% Dentro</th><th>Acima do Limite</th><th>% Acima</th></tr></thead><tbody>';
             tempo_data.forEach(r => {
-                tempo_html += `<tr><td>${r.Classificacao}</td><td>${formatMesAno(r.Mes)}</td><td class="text-right"><strong>${r.Dentro_Limite.toLocaleString('pt-BR')}</strong></td><td class="text-right">${(r.Pct_Dentro * 100).toFixed(1)}%</td><td class="text-right"><strong>${r.Acima_Limite.toLocaleString('pt-BR')}</strong></td><td class="text-right">${(r.Pct_Acima * 100).toFixed(1)}%</td></tr>`;
+                // Recalcular porcentagens corretamente
+                const total = (r.Dentro_Limite || 0) + (r.Acima_Limite || 0);
+                const pct_dentro = total > 0 ? ((r.Dentro_Limite || 0) / total * 100).toFixed(1) : 0;
+                const pct_acima = total > 0 ? ((r.Acima_Limite || 0) / total * 100).toFixed(1) : 0;
+                tempo_html += `<tr><td>${r.Classificacao}</td><td>${formatMesAno(r.Mes)}</td><td class="text-right"><strong>${r.Dentro_Limite.toLocaleString('pt-BR')}</strong></td><td class="text-right">${pct_dentro}%</td><td class="text-right"><strong>${r.Acima_Limite.toLocaleString('pt-BR')}</strong></td><td class="text-right">${pct_acima}%</td></tr>`;
             });
             tempo_html += '</tbody></table>';
             container_tempo.innerHTML = tempo_html;
@@ -494,10 +498,14 @@
                 cid_data = cid_data.filter(r => formatMesAno(r.Mes) === mes_filtro);
             }
             const cid = cid_data.sort((a, b) => parseInt(b.Quantidade || 0) - parseInt(a.Quantidade || 0)).slice(0, 50);
-            let html = '<h3>🏥 Top 50 CID</h3><table><thead><tr><th>#</th><th>CID</th><th>Mês</th><th>Quantidade</th></tr></thead><tbody>';
-            cid.forEach((r, i) => {
-                html += `<tr><td>${i + 1}</td><td>${r.CID_Full}</td><td>${formatMesAno(r.Mes)}</td><td class="text-right"><strong>${parseInt(r.Quantidade || 0).toLocaleString('pt-BR')}</strong></td></tr>`;
-            });
+            let html = `<h3>🏥 Top CID (${cid.length} registros)</h3><table><thead><tr><th>#</th><th>CID</th><th>Mês</th><th>Quantidade</th></tr></thead><tbody>`;
+            if (cid.length === 0) {
+                html += '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #999;">Nenhum dado disponível para o período selecionado</td></tr>';
+            } else {
+                cid.forEach((r, i) => {
+                    html += `<tr><td>${i + 1}</td><td>${r.CID_Full}</td><td>${formatMesAno(r.Mes)}</td><td class="text-right"><strong>${parseInt(r.Quantidade || 0).toLocaleString('pt-BR')}</strong></td></tr>`;
+                });
+            }
             html += '</tbody></table>';
             container2.innerHTML = html;
         }
