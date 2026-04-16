@@ -456,16 +456,20 @@
             (d.faixa_etaria || []).forEach(r => {
                 faixa[r.Faixa_Etaria] = (faixa[r.Faixa_Etaria] || 0) + parseInt(r.Quantidade || 0);
             });
+            const faixaOrdem = ['0-12 anos (Pediatrico)', '13-17 anos (Adolescente)', '18-59 anos (Adulto)', '60+ anos (Idoso)', 'Sem informacao'];
+            const faixaOrdenada = {};
+            faixaOrdem.forEach(f => {
+                if (faixa[f]) faixaOrdenada[f] = faixa[f];
+            });
             const ctx4 = document.getElementById('chartFaixaEtaria').getContext('2d');
             if (charts.faixaEtaria) charts.faixaEtaria.destroy();
             charts.faixaEtaria = new Chart(ctx4, {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
-                    labels: Object.keys(faixa),
-                    datasets: [{ data: Object.values(faixa), backgroundColor: ['#0066cc', '#00aa66', '#ff9900', '#ff6b6b'], borderColor: '#fff', borderWidth: 2 }]
+                    labels: Object.keys(faixaOrdenada),
+                    datasets: [{ label: 'Quantidade', data: Object.values(faixaOrdenada), backgroundColor: ['#0066cc', '#00aa66', '#ff9900', '#ff6b6b', '#cccccc'] }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-                plugins: [ChartDataLabels]
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
             // Tabela Limite de Tempo
